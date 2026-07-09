@@ -1,0 +1,8 @@
+{
+  "_comment": "คัดลอกไฟล์นี้เป็น mail.config.json แล้วใส่ค่าจริงจาก Brevo (อย่า commit ไฟล์จริงขึ้น git)",
+  "provider": "brevo",
+  "apiKey": "xkeysib-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "senderEmail": "อีเมลผู้ส่งที่ยืนยันแล้วใน Brevo เช่น np.chinnakit@gmail.com",
+  "senderName": "DUDEHUM",
+  "publicUrl": "https://xxxx.trycloudflare.com หรือโดเมนจริง (ใช้ทำลิงก์ในอีเมล) — ถ้าไม่ใส่จะใช้ http://localhost:5173"
+}

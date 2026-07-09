@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="เข้าสู่ระบบ / สมัครสมาชิก DUDEHUM" />
+  <title>เข้าสู่ระบบ — DUDEHUM</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="auth-page">
+  <div class="auth">
+    <!-- Left: brand panel -->
+    <aside class="auth__aside" aria-hidden="true">
+      <a href="index.html" class="brand brand--light">
+        <img class="brand__logo" src="assets/logo-white.svg" alt="DH Group" />
+      </a>
+      <div class="auth__aside-body">
+        <h2>ยินดีต้อนรับกลับมา</h2>
+        <p>เข้าสู่ระบบเพื่อสะสมแต้ม รับโค้ดส่วนลดเฉพาะสมาชิก และดูประวัติคำสั่งซื้อของคุณ</p>
+        <ul class="auth__perks">
+          <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M12 6v10" stroke-dasharray="1.5 2.5"/></svg> โค้ดส่วนลดเฉพาะสมาชิก</li>
+          <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17.8 6.8 20.1l1-5.8-4.3-4.1 5.9-.9z"/></svg> สะสมแต้มทุกการช้อป</li>
+          <li><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4"/><path d="M12 11v10"/></svg> ติดตามคำสั่งซื้อได้ในที่เดียว</li>
+        </ul>
+      </div>
+      <span class="auth__aside-foot">ช้อปของดี ราคาโดนใจ บนช้อปปี้</span>
+    </aside>
+
+    <!-- Right: forms -->
+    <main class="auth__main">
+      <a href="index.html" class="auth__back">← กลับหน้าแรก</a>
+
+      <div class="auth__card">
+        <div class="auth__tabs" role="tablist">
+          <button class="auth__tab is-active" id="tabLogin" role="tab" aria-selected="true">เข้าสู่ระบบ</button>
+          <button class="auth__tab" id="tabRegister" role="tab" aria-selected="false">สมัครสมาชิก</button>
+        </div>
+
+        <!-- Login form -->
+        <form class="auth__form is-active" id="loginForm" novalidate>
+          <h1 class="auth__title">เข้าสู่ระบบ</h1>
+          <label class="field-group">
+            <span>อีเมล</span>
+            <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+          </label>
+          <label class="field-group">
+            <span>รหัสผ่าน</span>
+            <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+          </label>
+          <button type="submit" class="btn btn--primary btn--block">เข้าสู่ระบบ</button>
+          <p class="auth__msg" id="loginMsg" role="status"></p>
+          <p class="auth__switch"><button type="button" class="link" data-goto="forgot">ลืมรหัสผ่าน?</button></p>
+          <p class="auth__switch">ยังไม่มีบัญชี? <button type="button" class="link" data-goto="register">สมัครสมาชิก</button></p>
+        </form>
+
+        <!-- Register form -->
+        <form class="auth__form" id="registerForm" novalidate>
+          <h1 class="auth__title">สมัครสมาชิก</h1>
+          <label class="field-group">
+            <span>ชื่อ</span>
+            <input type="text" name="name" placeholder="ชื่อของคุณ" autocomplete="name" required />
+          </label>
+          <label class="field-group">
+            <span>อีเมล</span>
+            <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+          </label>
+          <label class="field-group">
+            <span>รหัสผ่าน</span>
+            <input type="password" name="password" placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="new-password" required minlength="6" />
+          </label>
+          <button type="submit" class="btn btn--primary btn--block">สร้างบัญชี</button>
+          <p class="auth__msg" id="registerMsg" role="status"></p>
+          <p class="auth__switch">มีบัญชีอยู่แล้ว? <button type="button" class="link" data-goto="login">เข้าสู่ระบบ</button></p>
+        </form>
+
+        <!-- OTP verification step -->
+        <form class="auth__form" id="otpForm" novalidate>
+          <h1 class="auth__title">ยืนยันอีเมล</h1>
+          <p class="auth__otp-hint">เราส่งรหัส 6 หลักไปที่<br /><b id="otpEmail"></b></p>
+          <label class="field-group">
+            <span>กรอกรหัส OTP</span>
+            <input type="text" name="otp" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                   placeholder="- - - - - -" autocomplete="one-time-code" required class="otp-input" />
+          </label>
+          <button type="submit" class="btn btn--primary btn--block">ยืนยัน</button>
+          <p class="auth__msg" id="otpMsg" role="status"></p>
+          <p class="auth__switch">
+            ไม่ได้รับรหัส? <button type="button" class="link" id="resendBtn">ส่งรหัสใหม่</button>
+          </p>
+          <p class="auth__switch"><button type="button" class="link" id="otpBack">← กลับไปแก้ไขข้อมูล</button></p>
+        </form>
+
+        <!-- Forgot password: request reset OTP -->
+        <form class="auth__form" id="forgotForm" novalidate>
+          <h1 class="auth__title">ลืมรหัสผ่าน?</h1>
+          <p class="auth__otp-hint">กรอกอีเมลที่ใช้สมัคร เราจะส่งรหัส OTP ไปให้ตั้งรหัสผ่านใหม่</p>
+          <label class="field-group">
+            <span>อีเมล</span>
+            <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+          </label>
+          <button type="submit" class="btn btn--primary btn--block">ส่งรหัสรีเซ็ต</button>
+          <p class="auth__msg" id="forgotMsg" role="status"></p>
+          <p class="auth__switch"><button type="button" class="link" data-goto="login">← กลับไปเข้าสู่ระบบ</button></p>
+        </form>
+
+        <!-- Reset password: enter OTP + new password -->
+        <form class="auth__form" id="resetForm" novalidate>
+          <h1 class="auth__title">ตั้งรหัสผ่านใหม่</h1>
+          <p class="auth__otp-hint">เราส่งรหัส 6 หลักไปที่<br /><b id="resetEmail"></b></p>
+          <label class="field-group">
+            <span>รหัส OTP</span>
+            <input type="text" name="otp" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                   placeholder="- - - - - -" autocomplete="one-time-code" required class="otp-input" />
+          </label>
+          <label class="field-group">
+            <span>รหัสผ่านใหม่</span>
+            <input type="password" name="password" placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="new-password" required minlength="6" />
+          </label>
+          <button type="submit" class="btn btn--primary btn--block">ยืนยันตั้งรหัสใหม่</button>
+          <p class="auth__msg" id="resetMsg" role="status"></p>
+          <p class="auth__switch">ไม่ได้รับรหัส? <button type="button" class="link" id="resetResendBtn">ส่งรหัสใหม่</button></p>
+          <p class="auth__switch"><button type="button" class="link" data-goto="login">← กลับไปเข้าสู่ระบบ</button></p>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    (async function () {
+      // If already logged in, go straight to account
+      if (await Auth.me()) { window.location.replace("shop.html"); return; }
+
+      var tabLogin = document.getElementById("tabLogin");
+      var tabRegister = document.getElementById("tabRegister");
+      var tabs = document.querySelector(".auth__tabs");
+      var forms = {
+        login: document.getElementById("loginForm"),
+        register: document.getElementById("registerForm"),
+        otp: document.getElementById("otpForm"),
+        forgot: document.getElementById("forgotForm"),
+        reset: document.getElementById("resetForm")
+      };
+      var loginForm = forms.login;
+      var registerForm = forms.register;
+      var otpForm = forms.otp;
+      var forgotForm = forms.forgot;
+      var resetForm = forms.reset;
+      var pendingEmail = null;        // email awaiting sign-up OTP
+      var pendingResetEmail = null;   // email awaiting password-reset OTP
+
+      // step = "login" | "register" | "otp" | "forgot" | "reset"
+      function show(step) {
+        var showTabs = step === "login" || step === "register";
+        tabs.style.display = showTabs ? "flex" : "none";
+        tabLogin.classList.toggle("is-active", step === "login");
+        tabRegister.classList.toggle("is-active", step === "register");
+        tabLogin.setAttribute("aria-selected", String(step === "login"));
+        tabRegister.setAttribute("aria-selected", String(step === "register"));
+        Object.keys(forms).forEach(function (k) {
+          forms[k].classList.toggle("is-active", k === step);
+        });
+      }
+      tabLogin.addEventListener("click", function () { show("login"); });
+      tabRegister.addEventListener("click", function () { show("register"); });
+      document.querySelectorAll("[data-goto]").forEach(function (b) {
+        b.addEventListener("click", function () { show(b.getAttribute("data-goto")); });
+      });
+      if (location.hash === "#register") show("register");
+
+      function setMsg(el, text, ok) {
+        el.textContent = text;
+        el.className = "auth__msg " + (ok ? "is-ok" : "is-err");
+      }
+
+      loginForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var f = e.target;
+        var msg = document.getElementById("loginMsg");
+        try {
+          await Auth.login(f.email.value, f.password.value);
+          setMsg(msg, "เข้าสู่ระบบสำเร็จ กำลังพาไปหน้าบัญชี...", true);
+          setTimeout(function () { window.location.href = "shop.html"; }, 700);
+        } catch (err) {
+          setMsg(msg, "" + err.message, false);
+        }
+      });
+
+      // Step 1: submit sign-up -> server emails an OTP -> switch to OTP step
+      registerForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var f = e.target;
+        var msg = document.getElementById("registerMsg");
+        if (f.password.value.length < 6) {
+          setMsg(msg, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร", false);
+          return;
+        }
+        var btn = f.querySelector("button[type=submit]");
+        btn.disabled = true;
+        setMsg(msg, "กำลังส่งรหัส OTP ไปที่อีเมล...", true);
+        try {
+          var r = await Auth.register(f.name.value, f.email.value, f.password.value);
+          pendingEmail = r.email;
+          document.getElementById("otpEmail").textContent = pendingEmail;
+          setMsg(msg, "", true);
+          document.getElementById("otpMsg").textContent = "";
+          show("otp");
+          otpForm.otp.value = "";
+          otpForm.otp.focus();
+        } catch (err) {
+          setMsg(msg, "" + err.message, false);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      // Only allow digits in the OTP box
+      otpForm.otp.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, "").slice(0, 6);
+      });
+
+      // Step 2: verify OTP -> account created + logged in
+      otpForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var msg = document.getElementById("otpMsg");
+        var code = otpForm.otp.value.trim();
+        if (code.length !== 6) { setMsg(msg, "กรุณากรอกรหัส 6 หลัก", false); return; }
+        var btn = otpForm.querySelector("button[type=submit]");
+        btn.disabled = true;
+        try {
+          await Auth.verifyOtp(pendingEmail, code);
+          setMsg(msg, "ยืนยันสำเร็จ! กำลังพาไปหน้าบัญชี...", true);
+          setTimeout(function () { window.location.href = "shop.html"; }, 700);
+        } catch (err) {
+          setMsg(msg, "" + err.message, false);
+          btn.disabled = false;
+        }
+      });
+
+      // Resend OTP (server enforces a cooldown)
+      var resendBtn = document.getElementById("resendBtn");
+      resendBtn.addEventListener("click", async function () {
+        var msg = document.getElementById("otpMsg");
+        resendBtn.disabled = true;
+        try {
+          await Auth.resendOtp(pendingEmail);
+          setMsg(msg, "ส่งรหัสใหม่ไปที่อีเมลแล้ว", true);
+        } catch (err) {
+          setMsg(msg, "" + err.message, false);
+        }
+        var n = 30;
+        resendBtn.textContent = "ส่งรหัสใหม่ (" + n + ")";
+        var timer = setInterval(function () {
+          n -= 1;
+          if (n <= 0) {
+            clearInterval(timer);
+            resendBtn.textContent = "ส่งรหัสใหม่";
+            resendBtn.disabled = false;
+          } else {
+            resendBtn.textContent = "ส่งรหัสใหม่ (" + n + ")";
+          }
+        }, 1000);
+      });
+
+      document.getElementById("otpBack").addEventListener("click", function () {
+        show("register");
+      });
+
+      // ----- Forgot password: request reset OTP -----
+      forgotForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var msg = document.getElementById("forgotMsg");
+        var email = forgotForm.email.value.trim();
+        var btn = forgotForm.querySelector("button[type=submit]");
+        btn.disabled = true;
+        setMsg(msg, "กำลังส่งรหัส...", true);
+        try {
+          await Auth.forgotPassword(email);
+          pendingResetEmail = email;
+          document.getElementById("resetEmail").textContent = email;
+          document.getElementById("resetMsg").textContent = "";
+          setMsg(msg, "", true);
+          show("reset");
+          resetForm.otp.value = "";
+          resetForm.password.value = "";
+          resetForm.otp.focus();
+        } catch (err) {
+          setMsg(msg, "" + err.message, false);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      resetForm.otp.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, "").slice(0, 6);
+      });
+
+      // ----- Reset password: verify OTP + set new password -----
+      resetForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var msg = document.getElementById("resetMsg");
+        var code = resetForm.otp.value.trim();
+        var pw = resetForm.password.value;
+        if (code.length !== 6) { setMsg(msg, "กรุณากรอกรหัส 6 หลัก", false); return; }
+        if (pw.length < 6) { setMsg(msg, "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร", false); return; }
+        var btn = resetForm.querySelector("button[type=submit]");
+        btn.disabled = true;
+        try {
+          await Auth.resetPassword(pendingResetEmail, code, pw);
+          setMsg(msg, "ตั้งรหัสผ่านใหม่สำเร็จ! กำลังพาไปหน้าบัญชี...", true);
+          setTimeout(function () { window.location.href = "shop.html"; }, 800);
+        } catch (err) {
+          setMsg(msg, "" + err.message, false);
+          btn.disabled = false;
+        }
+      });
+
+      // Resend reset OTP (server enforces cooldown)
+      var resetResendBtn = document.getElementById("resetResendBtn");
+      resetResendBtn.addEventListener("click", async function () {
+        var msg = document.getElementById("resetMsg");
+        resetResendBtn.disabled = true;
+        try {
+          await Auth.forgotPassword(pendingResetEmail);
+          setMsg(msg, "ส่งรหัสใหม่ไปที่อีเมลแล้ว", true);
+        } catch (err) {
+          setMsg(msg, "" + err.message, false);
+        }
+        var n = 30;
+        resetResendBtn.textContent = "ส่งรหัสใหม่ (" + n + ")";
+        var timer = setInterval(function () {
+          n -= 1;
+          if (n <= 0) {
+            clearInterval(timer);
+            resetResendBtn.textContent = "ส่งรหัสใหม่";
+            resetResendBtn.disabled = false;
+          } else {
+            resetResendBtn.textContent = "ส่งรหัสใหม่ (" + n + ")";
+          }
+        }, 1000);
+      });
+    })();
+  </script>
+</body>
+</html>

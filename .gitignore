@@ -1,0 +1,13 @@
+# ข้อมูลเซิร์ฟเวอร์ — อย่า commit ขึ้น git สาธารณะ
+server/data/secret.key
+server/data/users.json
+server/data/pending.json
+server/data/reset.json
+server/data/products.json
+server/data/uploads/
+server/data/mail.config.json
+
+# ระบบ
+Thumbs.db
+.DS_Store
+node_modules/

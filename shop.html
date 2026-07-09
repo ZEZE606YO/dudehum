@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DUDEHUM — หน้าร้าน</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/shop.css" />
+</head>
+<body class="shop-body">
+  <!-- ===== Header ===== -->
+  <header class="s-header">
+    <div class="s-container">
+      <!-- top bar -->
+      <div class="s-topbar">
+        <div class="s-topbar__inner">
+          <div class="s-topbar__links">
+            <a href="#">Seller Centre</a><span>|</span>
+            <a href="#">เปิดร้านค้า</a><span>|</span>
+            <a href="#">ติดตามเรา</a>
+          </div>
+          <div class="s-topbar__right">
+            <a href="#"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/></svg> การแจ้งเตือน</a>
+            <a href="#"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.5 1.5c0 1.6-2 2-2 3.2"/><path d="M12 17h.01"/></svg> ช่วยเหลือ</a>
+            <div class="s-user" id="userBtn">
+              <span class="s-user__avatar" id="userAvatar">U</span>
+              <span id="userName">สมาชิก</span> ▾
+              <div class="s-user__menu" id="userMenu">
+                <a href="account.html">บัญชีของฉัน</a>
+                <a href="#">คำสั่งซื้อของฉัน</a>
+                <button type="button" id="logoutBtn">ออกจากระบบ</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- logo + search + cart -->
+      <div class="s-mainhead">
+        <a href="shop.html" class="s-logo">
+          <img class="s-logo__img" src="assets/logo-white.svg" alt="DH Group" />
+        </a>
+        <div class="s-search">
+          <form class="s-search__box" onsubmit="return false;">
+            <input type="text" placeholder="ค้นหาสินค้าและร้านค้า" aria-label="ค้นหา" />
+            <button type="submit"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg></button>
+          </form>
+          <div class="s-keywords">
+            <a href="#">หูฟังไร้สาย</a>
+            <a href="#">สมาร์ทวอทช์</a>
+            <a href="#">พาวเวอร์แบงก์</a>
+            <a href="#">เคสมือถือ</a>
+            <a href="#">ลำโพงบลูทูธ</a>
+          </div>
+        </div>
+        <a href="account.html" class="s-cart" aria-label="ตะกร้า"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 4h2.3l2.2 11.4a1 1 0 0 0 1 .8h9a1 1 0 0 0 1-.8L20.5 8H6"/></svg><span class="s-cart__badge">3</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="s-container">
+    <!-- ===== Banners ===== -->
+    <section class="s-banners">
+      <div class="s-banner-main">
+        <div>
+          <h2>DUDEHUM<br />BRAND DAY</h2>
+          <p>ลดสูงสุด 50% ของแท้ ส่งไว ทั่วไทย</p>
+          <a href="#" class="s-pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 4h2.3l2.2 11.4a1 1 0 0 0 1 .8h9a1 1 0 0 0 1-.8L20.5 8H6"/></svg> ช้อปเลย</a>
+        </div>
+      </div>
+      <div class="s-banner-side">
+        <div class="s-banner-mini b1">
+          <h3>ดีลเด็ดวันพุธ</h3>
+          <span>ส่งไวกว่า • ส่งฟรี</span>
+        </div>
+        <div class="s-banner-mini b2">
+          <h3>สินค้ามาใหม่</h3>
+          <span>ลงทะเบียนรับก่อนใคร</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Quick nav ===== -->
+    <div class="s-card">
+      <nav class="s-quicknav">
+        <a class="s-quick" href="#"><span class="s-quick__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h10v8H3z"/><path d="M13 10h4l3 3v2h-7z"/><circle cx="7" cy="17.5" r="1.5"/><circle cx="17" cy="17.5" r="1.5"/></svg></span><span>ส่งฟรี</span></a>
+        <a class="s-quick" href="#"><span class="s-quick__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17.8 6.8 20.1l1-5.8-4.3-4.1 5.9-.9z"/></svg></span><span>Fulfilled</span></a>
+        <a class="s-quick" href="#"><span class="s-quick__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></span><span>ช้อปเทรนด์ดี</span></a>
+        <a class="s-quick" href="#"><span class="s-quick__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1 12H7z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span><span>ช้อปมอลล์</span></a>
+        <a class="s-quick" href="#"><span class="s-quick__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4l4 3 4-3 4 3-3 3v10H7V10L4 7z"/></svg></span><span>ช้อปแฟชั่น</span></a>
+        <a class="s-quick" href="#"><span class="s-quick__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11v9H4v-9z"/><path d="M7 11l4-7a2 2 0 0 1 2 2v3h5a2 2 0 0 1 2 2.4l-1.4 5.6a2 2 0 0 1-2 1.5H7"/></svg></span><span>ช้อปคุ้มชัวร์</span></a>
+        <a class="s-quick" href="#"><span class="s-quick__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v11H4z"/><path d="M3 5h18l-1 4H4z"/><path d="M9 20v-6h6v6"/></svg></span><span>ซูเปอร์มาร์เก็ต</span></a>
+      </nav>
+    </div>
+
+    <!-- ===== Categories ===== -->
+    <div class="s-card">
+      <div class="s-sec-title">หมวดหมู่</div>
+      <div class="s-cats" id="cats"></div>
+    </div>
+
+    <!-- ===== Flash sale ===== -->
+    <div class="s-card" id="flashSaleCard">
+      <div class="s-flash-head">
+        <span class="s-flash-logo"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg> FLASH SALE</span>
+        <div class="s-timer" id="timer"><b>02</b><b>35</b><b>15</b></div>
+        <a href="#" class="s-flash-more">ดูทั้งหมด ›</a>
+      </div>
+      <div class="s-products" id="flashProducts"></div>
+    </div>
+
+    <!-- ===== Products (user listings) ===== -->
+    <div class="s-card">
+      <div class="s-sec-row">
+        <div class="s-sec-title">สินค้าในร้าน</div>
+        <button class="s-sell-btn" id="sellBtn" type="button">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          ลงขายสินค้า
+        </button>
+      </div>
+      <div class="s-products" id="recoProducts"></div>
+    </div>
+  </main>
+
+  <footer class="s-footer">© 2026 DUDEHUM — หน้าร้านตัวอย่าง (mock)</footer>
+
+  <!-- ===== Sell modal ===== -->
+  <div class="s-modal" id="sellModal">
+    <div class="s-modal__box">
+      <div class="s-modal__head">
+        <h3>ลงขายสินค้า</h3>
+        <button class="s-modal__close" id="sellClose" type="button" aria-label="ปิด">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <form id="sellForm" class="s-form" novalidate>
+        <label class="field-group"><span>ชื่อสินค้า</span>
+          <input name="name" maxlength="80" required placeholder="เช่น หูฟังไร้สาย Pro" />
+        </label>
+        <div class="s-form__row">
+          <label class="field-group"><span>ราคาขาย (บาท)</span>
+            <input name="price" type="number" min="0" required placeholder="590" />
+          </label>
+          <label class="field-group"><span>ราคาเดิม (ถ้ามี)</span>
+            <input name="oldPrice" type="number" min="0" placeholder="990" />
+          </label>
+        </div>
+        <label class="field-group"><span>รายละเอียด</span>
+          <textarea name="desc" maxlength="300" rows="2" placeholder="รายละเอียดสินค้าโดยย่อ"></textarea>
+        </label>
+        <label class="field-group"><span>รูปสินค้า (อัปโหลดจากเครื่อง)</span>
+          <input type="file" name="image" id="imgInput" accept="image/*" />
+        </label>
+        <div class="s-icon-preview" id="iconPreview" aria-hidden="true"></div>
+        <button type="button" class="s-clear-img" id="clearImg" hidden>เอารูปออก</button>
+        <label class="field-group"><span>ไอคอน (ใช้เมื่อไม่มีรูป)</span>
+          <select name="icon" id="iconSelect"></select>
+        </label>
+        <button type="submit" class="btn btn--primary btn--block">ลงขาย</button>
+        <p class="s-form__msg" id="sellMsg" role="status"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    (async function () {
+      // ต้องล็อกอินก่อนถึงจะเข้าหน้านี้ได้
+      var user = await Auth.requireAuth("login.html");
+      if (!user) return;
+
+      var name = user.name || "สมาชิก";
+      document.getElementById("userName").textContent = name.split(" ")[0];
+      document.getElementById("userAvatar").textContent = name.trim().charAt(0).toUpperCase() || "U";
+
+      // เมนูผู้ใช้
+      var userBtn = document.getElementById("userBtn");
+      var userMenu = document.getElementById("userMenu");
+      userBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        userMenu.classList.toggle("open");
+      });
+      document.addEventListener("click", function () { userMenu.classList.remove("open"); });
+      document.getElementById("logoutBtn").addEventListener("click", async function () {
+        await Auth.logout();
+        window.location.href = "index.html";
+      });
+
+      // ---- ไอคอน SVG (แทนอีโมจิ) ----
+      var ICONS = {
+        beauty:'<rect x="9" y="9" width="6" height="11" rx="1"/><path d="M9 9V6l3-2 3 2v3"/>',
+        shirt:'<path d="M8 4l4 3 4-3 4 3-3 3v10H7V10L4 7z"/>',
+        bag:'<path d="M6 8h12l-1 12H7z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+        heel:'<path d="M4 7v6c0 1 .5 1.5 1.5 1.7L17 17v-2c-4-.6-6-2-7-4.5C9.4 8.7 9 7.5 9 7z"/><path d="M4 18h5"/>',
+        watch:'<rect x="7" y="7" width="10" height="10" rx="2.5"/><path d="M9.5 7l.7-3h3.6l.7 3M9.5 17l.7 3h3.6l.7-3"/>',
+        headphone:'<path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4" height="6.5" rx="1.5"/><rect x="17" y="13" width="4" height="6.5" rx="1.5"/>',
+        tv:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/>',
+        camera:'<rect x="3" y="7" width="18" height="12" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8.5 7l1.2-2h4.6l1.2 2"/>',
+        bottle:'<path d="M9 9h6v9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/><path d="M10 9V6h4v3"/><path d="M11 4h2"/>',
+        paw:'<circle cx="7" cy="10" r="1.6"/><circle cx="12" cy="8.5" r="1.6"/><circle cx="17" cy="10" r="1.6"/><path d="M8.5 15.5a3.5 3.5 0 0 1 7 0 2.5 2.5 0 0 1-7 0z"/>',
+        health:'<path d="M12 20s-7-4.5-7-9.5A3.5 3.5 0 0 1 12 8a3.5 3.5 0 0 1 7 2.5c0 5-7 9.5-7 9.5z"/>',
+        dress:'<path d="M9 4l3 3 3-3 1.5 4.5L14 11l3 9H7l3-9-2.5-2.5z"/>',
+        sneaker:'<path d="M3 15l6-3 3 2h6a3 3 0 0 1 3 3v1H3z"/><path d="M9 12V8"/>',
+        ring:'<circle cx="12" cy="14" r="5"/><path d="M9 9l3-4 3 4"/><path d="M9.5 9.5l2.5 3 2.5-3"/>',
+        bed:'<path d="M3 9v10"/><path d="M3 14h18v5"/><path d="M21 19v-5a2 2 0 0 0-2-2h-8v2"/><rect x="5" y="11" width="4" height="3" rx="1"/>',
+        phone:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',
+        laptop:'<rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 20h20"/>',
+        food:'<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M4 11a8 8 0 0 1 16 0"/><path d="M12 3v3"/>',
+        bike:'<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5l3 8"/><path d="M9 9h4"/>',
+        gamepad:'<path d="M8 8h8a5 5 0 0 1 5 5.5A2.8 2.8 0 0 1 15.7 15H8.3A2.8 2.8 0 0 1 3 13.5 5 5 0 0 1 8 8z"/><path d="M7 11.5v2M6 12.5h2"/><circle cx="16" cy="12" r=".6"/>',
+        battery:'<rect x="3" y="8" width="16" height="9" rx="2"/><path d="M21 11.5v2"/><path d="M7 12.5h4"/>',
+        speaker:'<rect x="6" y="3" width="12" height="18" rx="2"/><circle cx="12" cy="14" r="3"/><circle cx="12" cy="7" r="1"/>',
+        keyboard:'<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 11h.5M11 11h.5M15 11h.5M8 14h8"/>',
+        mouse:'<rect x="8" y="4" width="8" height="16" rx="4"/><path d="M12 8v3"/>',
+        bulb:'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 1 4 10.5c-.6.6-1 1.3-1 2H9c0-.7-.4-1.4-1-2A6 6 0 0 1 12 3z"/>',
+        skincare:'<rect x="8" y="8" width="8" height="12" rx="2"/><path d="M10 8V5h4v3"/><path d="M10 5h4"/>',
+        backpack:'<path d="M7 8a5 5 0 0 1 10 0v11a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1z"/><path d="M9 8a3 3 0 0 1 6 0"/><path d="M9 13h6"/>',
+        cup:'<path d="M6 8h10v6a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4z"/><path d="M16 9h2a2 2 0 0 1 0 4h-2"/><path d="M9 3v2M12 3v2"/>'
+      };
+      function ic(name){ return '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[name] || '') + '</svg>'; }
+
+      // ---- ข้อมูลตัวอย่าง ----
+      var cats = [
+        ["beauty","ความงามและของใช้ส่วนตัว"],["shirt","เสื้อผ้าแฟชั่นผู้ชาย"],["bag","กระเป๋า"],
+        ["heel","รองเท้าผู้หญิง"],["watch","นาฬิกาและแว่นตา"],["headphone","อุปกรณ์อิเล็กทรอนิกส์"],
+        ["tv","เครื่องใช้ไฟฟ้าในบ้าน"],["camera","กล้องและอุปกรณ์ถ่ายภาพ"],["bottle","ของเล่น แม่และเด็ก"],["paw","สัตว์เลี้ยง"],
+        ["health","กลุ่มผลิตภัณฑ์สุขภาพ"],["dress","เสื้อผ้าแฟชั่นผู้หญิง"],["sneaker","รองเท้าผู้ชาย"],
+        ["ring","เครื่องประดับ"],["bed","เครื่องใช้ในบ้าน"],["phone","มือถือและแท็บเล็ต"],
+        ["laptop","คอมพิวเตอร์และแล็ปท็อป"],["food","อาหารและเครื่องดื่ม"],["bike","กีฬาและกิจกรรมกลางแจ้ง"],["gamepad","เกมและอุปกรณ์เสริม"]
+      ];
+      document.getElementById("cats").innerHTML = cats.map(function (c) {
+        return '<a class="s-cat" href="#"><span class="s-cat__icon">' + ic(c[0]) + '</span><span>' + c[1] + '</span></a>';
+      }).join("");
+
+      var products = [
+        ["headphone","หูฟังไร้สาย Pro กันน้ำ เบสหนัก",590,990,"ขายแล้ว 1.2พัน"],
+        ["watch","สมาร์ทวอทช์ วัดหัวใจ จอ AMOLED",790,1290,"ขายแล้ว 980"],
+        ["battery","พาวเวอร์แบงก์ 20000mAh ชาร์จเร็ว",450,750,"ขายแล้ว 2.5พัน"],
+        ["speaker","ลำโพงบลูทูธ พกพา กันน้ำ",350,590,"ขายแล้ว 640"],
+        ["phone","เคสมือถือกันกระแทก ใส่ทุกรุ่น",99,199,"ขายแล้ว 5พัน"],
+        ["keyboard","คีย์บอร์ดไร้สาย เงียบ พกพา",290,490,"ขายแล้ว 410"],
+        ["mouse","เมาส์ไร้สาย ปุ่มเงียบ แบตอึด",159,299,"ขายแล้ว 830"],
+        ["bulb","หลอดไฟ LED อัจฉริยะ เปลี่ยนสี",120,220,"ขายแล้ว 300"],
+        ["skincare","เซ็ตดูแลผิวหน้า ครบเซ็ต",259,459,"ขายแล้ว 720"],
+        ["sneaker","รองเท้าผ้าใบ ใส่สบาย ระบายอากาศ",399,699,"ขายแล้ว 1.1พัน"],
+        ["backpack","กระเป๋าเป้ กันน้ำ ใส่โน้ตบุ๊ก",329,559,"ขายแล้ว 540"],
+        ["cup","แก้วเก็บความเย็น สแตนเลส",149,259,"ขายแล้ว 260"]
+      ];
+      function card(p, flash) {
+        return '<div class="s-product">' +
+          '<div class="s-product__img">' + ic(p[0]) + '</div>' +
+          '<div class="s-product__body">' +
+            '<div class="s-product__name">' + p[1] + '</div>' +
+            '<div class="s-product__price">฿' + p[2] + ' <s>฿' + p[3] + '</s></div>' +
+            (flash ? '<span class="s-flash-tag">FLASH SALE</span>' : '') +
+            '<div class="s-product__sold">' + p[4] + '</div>' +
+          '</div></div>';
+      }
+      // ===== ระบบสินค้า (User ลงขายเอง) =====
+      // ซ่อน demo Flash Sale (ข้อมูล var products/card() ด้านบนยังเก็บไว้ เผื่อใช้ภายหลัง)
+      var fc = document.getElementById("flashSaleCard");
+      if (fc) fc.style.display = "none";
+
+      // escape กัน XSS ก่อนใส่ innerHTML
+      function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+      // ป้ายกำกับไอคอนให้เลือกตอนลงขาย (คีย์ตรงกับ ICONS)
+      var ICON_LABELS = {
+        bag:"กระเป๋า", shirt:"เสื้อผ้าผู้ชาย", dress:"เสื้อผ้าผู้หญิง", heel:"รองเท้าผู้หญิง", sneaker:"รองเท้า/ผ้าใบ",
+        watch:"นาฬิกา", headphone:"หูฟัง", speaker:"ลำโพง", phone:"มือถือ", laptop:"คอมพิวเตอร์", tv:"ทีวี/เครื่องใช้ไฟฟ้า",
+        camera:"กล้อง", keyboard:"คีย์บอร์ด", mouse:"เมาส์", battery:"พาวเวอร์แบงก์", bulb:"หลอดไฟ/ของแต่งบ้าน",
+        beauty:"ความงาม", skincare:"สกินแคร์", ring:"เครื่องประดับ", bottle:"แม่และเด็ก", paw:"สัตว์เลี้ยง",
+        health:"สุขภาพ", bed:"ของใช้ในบ้าน", food:"อาหาร/เครื่องดื่ม", bike:"กีฬา", gamepad:"เกม", cup:"แก้ว/กระบอกน้ำ", backpack:"เป้"
+      };
+
+      var iconSelect = document.getElementById("iconSelect");
+      iconSelect.innerHTML = Object.keys(ICON_LABELS).map(function (k) {
+        return '<option value="' + k + '">' + ICON_LABELS[k] + '</option>';
+      }).join("");
+      var iconPreview = document.getElementById("iconPreview");
+      var imgInput = document.getElementById("imgInput");
+      var clearImg = document.getElementById("clearImg");
+      var pendingImage = null;   // data URL ของรูปที่อัปโหลด (บีบอัดแล้ว)
+
+      function updatePreview(){
+        if (pendingImage) { iconPreview.innerHTML = '<img src="' + pendingImage + '" alt="preview">'; clearImg.hidden = false; }
+        else { iconPreview.innerHTML = ic(iconSelect.value); clearImg.hidden = true; }
+      }
+      iconSelect.addEventListener("change", updatePreview);
+
+      // ย่อ/บีบอัดรูปในเบราว์เซอร์ก่อนส่ง (ด้านยาวสุด 800px, JPEG)
+      function compressImage(file){
+        return new Promise(function (resolve) {
+          var url = URL.createObjectURL(file);
+          var img = new Image();
+          img.onload = function () {
+            var max = 800, w = img.width, h = img.height;
+            if (w > h && w > max) { h = Math.round(h * max / w); w = max; }
+            else if (h > max) { w = Math.round(w * max / h); h = max; }
+            var cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+            cv.getContext("2d").drawImage(img, 0, 0, w, h);
+            URL.revokeObjectURL(url);
+            try { resolve(cv.toDataURL("image/jpeg", 0.82)); } catch (e) { resolve(null); }
+          };
+          img.onerror = function () { URL.revokeObjectURL(url); resolve(null); };
+          img.src = url;
+        });
+      }
+      imgInput.addEventListener("change", function () {
+        var file = imgInput.files && imgInput.files[0];
+        if (!file) { pendingImage = null; updatePreview(); return; }
+        if (!/^image\//.test(file.type)) { sellMsg.textContent = "ไฟล์ต้องเป็นรูปภาพ"; imgInput.value = ""; return; }
+        sellMsg.textContent = "";
+        compressImage(file).then(function (dataUrl) {
+          pendingImage = dataUrl;
+          if (!dataUrl) sellMsg.textContent = "อ่านรูปไม่สำเร็จ ลองรูปอื่น";
+          updatePreview();
+        });
+      });
+      clearImg.addEventListener("click", function () { pendingImage = null; imgInput.value = ""; updatePreview(); });
+
+      updatePreview();
+
+      // การ์ดสินค้าจากเซิร์ฟเวอร์
+      function productCard(p){
+        var old = p.oldPrice ? ' <s>฿' + p.oldPrice + '</s>' : '';
+        var hasDisc = p.oldPrice && p.oldPrice > p.price;
+        var pct = hasDisc ? Math.round((p.oldPrice - p.price) / p.oldPrice * 100) : 0;
+        var badge = pct > 0 ? '<span class="s-disc">-' + pct + '%</span>' : '';
+        var oldTxt = hasDisc ? ' <s>฿' + p.oldPrice + '</s>' : '';
+        var del = p.mine ? '<button class="s-del" type="button" data-id="' + esc(p.id) + '" title="ลบสินค้า"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button>' : '';
+        var media = p.image
+          ? '<div class="s-product__img"><img src="' + esc(p.image) + '" alt="' + esc(p.name) + '"></div>'
+          : '<div class="s-product__img">' + ic(p.icon) + '</div>';
+        return '<div class="s-product">' + badge + del + media +
+          '<div class="s-product__body">' +
+            '<div class="s-product__name">' + esc(p.name) + '</div>' +
+            '<div class="s-tags"><span class="s-tag">ส่งฟรี</span>' + (hasDisc ? '<span class="s-tag s-tag--hot">ลดราคา</span>' : '') + '</div>' +
+            '<div class="s-product__foot">' +
+              '<div class="s-product__price">฿' + p.price + oldTxt + '</div>' +
+              '<div class="s-product__meta">โดย ' + esc(p.ownerName || "ผู้ขาย") + '</div>' +
+            '</div>' +
+          '</div></div>';
+      }
+
+      var recoBox = document.getElementById("recoProducts");
+      function loadProducts(){
+        fetch('/api/products', { credentials:'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            var list = d.products || [];
+            if (!list.length) {
+              recoBox.innerHTML = '<div class="s-empty">ยังไม่มีสินค้าในร้าน — กด “ลงขายสินค้า” เพื่อเพิ่มสินค้าชิ้นแรก</div>';
+              return;
+            }
+            recoBox.innerHTML = list.map(productCard).join("");
+          })
+          .catch(function () { recoBox.innerHTML = '<div class="s-empty">โหลดสินค้าไม่สำเร็จ</div>'; });
+      }
+      loadProducts();
+
+      // ลบสินค้า (เฉพาะของตัวเอง)
+      recoBox.addEventListener("click", function (e) {
+        var btn = e.target.closest(".s-del");
+        if (!btn) return;
+        if (!confirm("ลบสินค้านี้ออกจากร้าน?")) return;
+        fetch('/api/products/' + encodeURIComponent(btn.getAttribute("data-id")), { method:"DELETE", credentials:"same-origin" })
+          .then(function (r) { return r.json(); })
+          .then(function () { loadProducts(); });
+      });
+
+      // Modal ลงขายสินค้า
+      var sellModal = document.getElementById("sellModal");
+      var sellForm = document.getElementById("sellForm");
+      var sellMsg = document.getElementById("sellMsg");
+      document.getElementById("sellBtn").addEventListener("click", function () { sellModal.classList.add("open"); });
+      document.getElementById("sellClose").addEventListener("click", function () { sellModal.classList.remove("open"); });
+      sellModal.addEventListener("click", function (e) { if (e.target === sellModal) sellModal.classList.remove("open"); });
+
+      sellForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var el = sellForm.elements;
+        var body = {
+          name: el["name"].value, price: el["price"].value, oldPrice: el["oldPrice"].value,
+          desc: el["desc"].value, icon: el["icon"].value, image: pendingImage
+        };
+        sellMsg.className = "s-form__msg";
+        sellMsg.textContent = "กำลังบันทึก...";
+        fetch('/api/products', { method:"POST", headers:{"Content-Type":"application/json"}, credentials:"same-origin", body: JSON.stringify(body) })
+          .then(function (r) { return r.json().then(function (d) { return { ok:r.ok, d:d }; }); })
+          .then(function (res) {
+            if (!res.ok) { sellMsg.textContent = res.d.error || "บันทึกไม่สำเร็จ"; return; }
+            sellForm.reset(); pendingImage = null; updatePreview();
+            sellModal.classList.remove("open");
+            sellMsg.textContent = "";
+            loadProducts();
+          })
+          .catch(function () { sellMsg.textContent = "เกิดข้อผิดพลาด กรุณาลองใหม่"; });
+      });
+    })();
+  </script>
+</body>
+</html>

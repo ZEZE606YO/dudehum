@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>บัญชีของฉัน — DUDEHUM</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header scrolled" id="header">
+    <div class="container nav">
+      <a href="index.html" class="brand">
+        <img class="brand__logo" src="assets/logo.svg" alt="DH Group" />
+      </a>
+      <div class="nav__actions">
+        <a href="shop.html" class="btn btn--ghost btn--sm">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 12.5a1 1 0 0 1-1 .9H8a1 1 0 0 1-1-.9L6 7z"/><path d="M9 7V6a3 3 0 0 1 6 0v1"/></svg>
+          ไปช้อปต่อ
+        </a>
+        <button class="btn btn--primary btn--sm" id="logoutBtn">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-3"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h9"/></svg>
+          ออกจากระบบ
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="account">
+    <div class="container">
+      <section class="account__hero reveal visible">
+        <div class="account__avatar" id="avatar">U</div>
+        <div>
+          <h1 class="account__hello">สวัสดี, <span id="userName">สมาชิก</span></h1>
+          <p class="account__email" id="userEmail"></p>
+        </div>
+      </section>
+
+      <section class="grid grid--4 stats account__stats">
+        <div class="stat">
+          <span class="stat__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17.8 6.8 20.1l1-5.8-4.3-4.1 5.9-.9z"/></svg></span>
+          <span class="stat__num">1,250</span><span class="stat__label">แต้มสะสม</span>
+        </div>
+        <div class="stat">
+          <span class="stat__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4"/><path d="M12 11v10"/></svg></span>
+          <span class="stat__num">8</span><span class="stat__label">คำสั่งซื้อ</span>
+        </div>
+        <div class="stat">
+          <span class="stat__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M12 7v10" stroke-dasharray="1.5 2.5"/></svg></span>
+          <span class="stat__num">3</span><span class="stat__label">โค้ดส่วนลด</span>
+        </div>
+        <div class="stat">
+          <span class="stat__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8l4 4 4-6 4 6 4-4v9H4z"/><path d="M4 20h16"/></svg></span>
+          <span class="stat__num">VIP</span><span class="stat__label">ระดับสมาชิก</span>
+        </div>
+      </section>
+
+      <section class="account__panel">
+        <h2>คำสั่งซื้อล่าสุด</h2>
+        <div class="orders">
+          <div class="order">
+            <span class="order__thumb">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2.5"/><path d="M9.5 7l.7-3h3.6l.7 3M9.5 17l.7 3h3.6l.7-3"/></svg>
+            </span>
+            <div class="order__info">
+              <strong>สมาร์ทวอทช์ รุ่นใหม่</strong>
+              <span>#DH-10293 • 5 ก.ค. 2026</span>
+            </div>
+            <span class="order__price">฿790</span>
+            <span class="badge-status is-done">จัดส่งแล้ว</span>
+          </div>
+          <div class="order">
+            <span class="order__thumb">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4" height="6.5" rx="1.5"/><rect x="17" y="13" width="4" height="6.5" rx="1.5"/></svg>
+            </span>
+            <div class="order__info">
+              <strong>หูฟังไร้สาย Pro</strong>
+              <span>#DH-10188 • 2 ก.ค. 2026</span>
+            </div>
+            <span class="order__price">฿590</span>
+            <span class="badge-status is-ship">กำลังจัดส่ง</span>
+          </div>
+          <div class="order">
+            <span class="order__thumb">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="16" height="9" rx="2"/><path d="M21 11.5v2"/><path d="M7 12.5h4"/></svg>
+            </span>
+            <div class="order__info">
+              <strong>พาวเวอร์แบงก์ 20000mAh</strong>
+              <span>#DH-10077 • 28 มิ.ย. 2026</span>
+            </div>
+            <span class="order__price">฿450</span>
+            <span class="badge-status is-done">จัดส่งแล้ว</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>
+    (async function () {
+      var s = await Auth.requireAuth("login.html");
+      if (!s) return;
+      document.getElementById("userName").textContent = s.name || "สมาชิก";
+      document.getElementById("userEmail").textContent = s.email;
+      var first = (s.name || "U").trim().charAt(0).toUpperCase();
+      document.getElementById("avatar").textContent = first || "U";
+
+      document.getElementById("logoutBtn").addEventListener("click", async function () {
+        await Auth.logout();
+        window.location.href = "index.html";
+      });
+    })();
+  </script>
+</body>
+</html>
