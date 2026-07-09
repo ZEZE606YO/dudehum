@@ -1,0 +1,8 @@
+# Render Blueprint — deploy DUDEHUM as a Node web service
+services:
+  - type: web
+    name: dudehum
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
