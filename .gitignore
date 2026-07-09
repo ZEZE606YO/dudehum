@@ -5,7 +5,6 @@ server/data/pending.json
 server/data/reset.json
 server/data/products.json
 server/data/uploads/
-server/data/mail.config.json
 
 # ระบบ
 Thumbs.db
