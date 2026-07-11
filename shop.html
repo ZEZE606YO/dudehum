@@ -30,7 +30,8 @@
               <span id="userName">สมาชิก</span> ▾
               <div class="s-user__menu" id="userMenu">
                 <a href="account.html">บัญชีของฉัน</a>
-                <a href="#">คำสั่งซื้อของฉัน</a>
+                <a href="chat.html">แชท</a>
+                <a href="account.html">คำสั่งซื้อของฉัน</a>
                 <button type="button" id="logoutBtn">ออกจากระบบ</button>
               </div>
             </div>
@@ -56,7 +57,7 @@
             <a href="#">ลำโพงบลูทูธ</a>
           </div>
         </div>
-        <a href="account.html" class="s-cart" aria-label="ตะกร้า"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 4h2.3l2.2 11.4a1 1 0 0 0 1 .8h9a1 1 0 0 0 1-.8L20.5 8H6"/></svg><span class="s-cart__badge">3</span></a>
+        <a href="#" class="s-cart" id="cartIcon" aria-label="ตะกร้า"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 4h2.3l2.2 11.4a1 1 0 0 0 1 .8h9a1 1 0 0 0 1-.8L20.5 8H6"/></svg><span class="s-cart__badge" id="cartBadge">0</span></a>
       </div>
     </div>
   </header>
@@ -165,6 +166,120 @@
     </div>
   </div>
 
+  <!-- ===== Product detail modal (Shopee-style) ===== -->
+  <div class="s-modal s-detail" id="detailModal">
+    <div class="s-detail__box">
+      <button class="s-modal__close" id="detailClose" type="button" aria-label="ปิด">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+
+      <div class="s-detail__grid">
+        <!-- ซ้าย: รูป -->
+        <div class="s-detail__left">
+          <div class="s-detail__media" id="detailMedia"></div>
+          <div class="s-detail__share">
+            <span>แชร์:</span>
+            <button type="button" id="shareBtn" class="s-icon-btn" aria-label="แชร์"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg></button>
+            <button type="button" class="s-detail__fav" id="favBtn"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.5-7-9.5A3.5 3.5 0 0 1 12 8a3.5 3.5 0 0 1 7 2.5c0 5-7 9.5-7 9.5z"/></svg> <span id="favText">ถูกใจ</span></button>
+          </div>
+        </div>
+
+        <!-- ขวา: ข้อมูล -->
+        <div class="s-detail__info">
+          <div><span class="s-detail__mall">DUDEHUM</span></div>
+          <h2 id="detailName"></h2>
+          <div class="s-detail__rating" id="detailRating"></div>
+
+          <div class="s-detail__flash" id="detailFlash">
+            <div class="s-detail__flash-top">
+              <span class="s-detail__flash-logo">FLASH SALE</span>
+              <span class="s-detail__flash-timer">จบใน <b id="dTimer">00:00:00</b></span>
+            </div>
+            <div class="s-detail__price" id="detailPrice"></div>
+          </div>
+
+          <div class="s-detail__row">
+            <span class="s-detail__label">การจัดส่ง</span>
+            <span class="s-detail__val"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v8H3z"/><path d="M14 10h4l3 3v2h-7z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></svg> ส่งฟรีทั่วไทย</span>
+          </div>
+          <div class="s-detail__row">
+            <span class="s-detail__label">การันตี</span>
+            <span class="s-detail__val">คืนเงิน/สินค้าฟรีใน 15 วัน · ของแท้ 100%</span>
+          </div>
+          <div class="s-detail__row">
+            <span class="s-detail__label">จำนวน</span>
+            <div class="s-qty">
+              <button type="button" id="qtyMinus" aria-label="ลด">−</button>
+              <span id="qtyVal">1</span>
+              <button type="button" id="qtyPlus" aria-label="เพิ่ม">+</button>
+            </div>
+          </div>
+
+          <div class="s-detail__actions">
+            <button class="btn btn--ghost" type="button" id="cartBtn">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 4h2.3l2.2 11.4a1 1 0 0 0 1 .8h9a1 1 0 0 0 1-.8L20.5 8H6"/></svg>
+              เพิ่มไปยังรถเข็น
+            </button>
+            <button class="btn btn--primary" type="button" id="buyBtn">ซื้อสินค้า</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- การ์ดผู้ขาย -->
+      <div class="s-detail__seller-card">
+        <div class="s-seller__avatar" id="detailSellerAvatar">U</div>
+        <div class="s-seller__meta">
+          <strong id="detailSeller"></strong>
+          <span class="s-seller__on">ออนไลน์</span>
+        </div>
+        <div class="s-seller__btns">
+          <button class="btn btn--ghost btn--sm" type="button" id="chatBtn">แชทเลย</button>
+          <button class="btn btn--ghost btn--sm" type="button" id="viewShopBtn">ดูร้านค้า</button>
+        </div>
+      </div>
+
+      <!-- รายละเอียด -->
+      <div class="s-detail__desc-sec">
+        <h3>รายละเอียดสินค้า</h3>
+        <div class="s-detail__desc" id="detailDesc"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Cart modal ===== -->
+  <div class="s-modal" id="cartModal">
+    <div class="s-modal__box s-cart-box">
+      <div class="s-modal__head">
+        <h3>ตะกร้าของฉัน</h3>
+        <button class="s-modal__close" id="cartClose" type="button" aria-label="ปิด">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="s-cart-list" id="cartList"></div>
+      <div class="s-cart-foot">
+        <div class="s-cart-total">รวม <b id="cartTotal">฿0</b></div>
+        <button class="btn btn--primary" id="checkoutBtn" type="button">สั่งซื้อทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Payment modal (พร้อมเพย์) ===== -->
+  <div class="s-modal" id="payModal">
+    <div class="s-modal__box s-pay-box">
+      <div class="s-modal__head">
+        <h3>ชำระเงินพร้อมเพย์</h3>
+        <button class="s-modal__close" id="payClose" type="button" aria-label="ปิด">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="s-pay-body" id="payBody"></div>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div class="s-toast" id="toast" role="status"></div>
+
+  <script src="js/qrcode.js"></script>
   <script src="js/auth.js"></script>
   <script>
     (async function () {
@@ -336,7 +451,7 @@
         var media = p.image
           ? '<div class="s-product__img"><img src="' + esc(p.image) + '" alt="' + esc(p.name) + '"></div>'
           : '<div class="s-product__img">' + ic(p.icon) + '</div>';
-        return '<div class="s-product">' + badge + del + media +
+        return '<div class="s-product" data-id="' + esc(p.id) + '">' + badge + del + media +
           '<div class="s-product__body">' +
             '<div class="s-product__name">' + esc(p.name) + '</div>' +
             '<div class="s-tags"><span class="s-tag">ส่งฟรี</span>' + (hasDisc ? '<span class="s-tag s-tag--hot">ลดราคา</span>' : '') + '</div>' +
@@ -348,11 +463,13 @@
       }
 
       var recoBox = document.getElementById("recoProducts");
+      var loadedProducts = [];
       function loadProducts(){
         fetch('/api/products', { credentials:'same-origin' })
           .then(function (r) { return r.json(); })
           .then(function (d) {
             var list = d.products || [];
+            loadedProducts = list;
             if (!list.length) {
               recoBox.innerHTML = '<div class="s-empty">ยังไม่มีสินค้าในร้าน — กด “ลงขายสินค้า” เพื่อเพิ่มสินค้าชิ้นแรก</div>';
               return;
@@ -372,6 +489,229 @@
           .then(function (r) { return r.json(); })
           .then(function () { loadProducts(); });
       });
+
+      // ===== หน้ารายละเอียดสินค้า (กดการ์ด → เปิด) =====
+      var detailModal = document.getElementById("detailModal");
+      var detailFlash = document.getElementById("detailFlash");
+      var dTimer = document.getElementById("dTimer");
+      var qtyVal = document.getElementById("qtyVal");
+      var detailTimerId = null;
+      var currentProduct = null;
+      var favSet = {};
+
+      // ---- helpers ----
+      var toastEl = document.getElementById("toast");
+      var toastTimer = null;
+      function toast(msg){
+        toastEl.textContent = msg;
+        toastEl.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2300);
+      }
+      function postJSON(url, body, method){
+        return fetch(url, { method: method || "POST", headers: body ? {"Content-Type":"application/json"} : undefined, credentials:"same-origin", body: body ? JSON.stringify(body) : undefined })
+          .then(function(r){ return r.json().then(function(d){ return { ok:r.ok, status:r.status, d:d }; }); });
+      }
+      function loadFavorites(){
+        fetch('/api/favorites', {credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+          favSet = {}; (d.favorites || []).forEach(function(id){ favSet[id] = true; });
+        }).catch(function(){});
+      }
+      function updateFavHeart(){
+        var fav = currentProduct && favSet[currentProduct.id];
+        document.getElementById("favBtn").classList.toggle("on", !!fav);
+        document.getElementById("favText").textContent = fav ? "ถูกใจแล้ว" : "ถูกใจ";
+      }
+
+      function starRow(){
+        var s = "";
+        for (var i = 0; i < 5; i++) s += '<svg class="icon s-star" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17.8 6.8 20.1l1-5.8-4.3-4.1 5.9-.9z"/></svg>';
+        return s;
+      }
+      function two(n){ return String(n).padStart(2, "0"); }
+      function startTimer(){
+        var t = 1 * 3600 + 46 * 60 + 17;
+        function tick(){
+          if (t <= 0) t = 6 * 3600;
+          t -= 1;
+          dTimer.textContent = two(Math.floor(t / 3600)) + ":" + two(Math.floor((t % 3600) / 60)) + ":" + two(t % 60);
+        }
+        tick();
+        detailTimerId = setInterval(tick, 1000);
+      }
+      function stopTimer(){ if (detailTimerId) { clearInterval(detailTimerId); detailTimerId = null; } }
+
+      function openDetail(p){
+        var hasDisc = p.oldPrice && p.oldPrice > p.price;
+        var pct = hasDisc ? Math.round((p.oldPrice - p.price) / p.oldPrice * 100) : 0;
+        document.getElementById("detailMedia").innerHTML = p.image
+          ? '<img src="' + esc(p.image) + '" alt="' + esc(p.name) + '">'
+          : ic(p.icon);
+        document.getElementById("detailName").textContent = p.name;
+        document.getElementById("detailRating").innerHTML =
+          '<span class="s-stars">' + starRow() + '</span><b>5.0</b><span class="s-sep">|</span><span>ขายแล้ว 0 ชิ้น</span>';
+        document.getElementById("detailPrice").innerHTML = '฿' + p.price +
+          (hasDisc ? ' <s>฿' + p.oldPrice + '</s> <span class="s-detail__disc">-' + pct + '%</span>' : '');
+        detailFlash.classList.toggle("on", !!hasDisc);
+        stopTimer();
+        if (hasDisc) startTimer(); else dTimer.textContent = "";
+        qtyVal.textContent = "1";
+        document.getElementById("detailDesc").textContent = p.desc || "ไม่มีรายละเอียดเพิ่มเติม";
+        var owner = p.ownerName || "ผู้ขาย";
+        document.getElementById("detailSeller").textContent = owner;
+        document.getElementById("detailSellerAvatar").textContent = owner.trim().charAt(0).toUpperCase() || "U";
+        currentProduct = p;
+        updateFavHeart();
+        detailModal.classList.add("open");
+      }
+      function closeDetail(){ detailModal.classList.remove("open"); stopTimer(); }
+
+      recoBox.addEventListener("click", function (e) {
+        if (e.target.closest(".s-del")) return;   // ปุ่มลบ ไม่เปิดรายละเอียด
+        var card = e.target.closest(".s-product");
+        if (!card) return;
+        var p = loadedProducts.find(function (x) { return x.id === card.getAttribute("data-id"); });
+        if (p) openDetail(p);
+      });
+      document.getElementById("detailClose").addEventListener("click", closeDetail);
+      detailModal.addEventListener("click", function (e) { if (e.target === detailModal) closeDetail(); });
+
+      // จำนวน + / -
+      document.getElementById("qtyPlus").addEventListener("click", function () { qtyVal.textContent = parseInt(qtyVal.textContent, 10) + 1; });
+      document.getElementById("qtyMinus").addEventListener("click", function () { qtyVal.textContent = Math.max(1, parseInt(qtyVal.textContent, 10) - 1); });
+
+      // ถูกใจ (toggle)
+      document.getElementById("favBtn").addEventListener("click", function () {
+        if (!currentProduct) return;
+        postJSON('/api/favorites', { productId: currentProduct.id }).then(function (res) {
+          if (!res.ok) { toast(res.d.error || "ผิดพลาด"); return; }
+          if (res.d.favorited) favSet[currentProduct.id] = true; else delete favSet[currentProduct.id];
+          updateFavHeart();
+          toast(res.d.favorited ? "เพิ่มในรายการถูกใจแล้ว" : "เอาออกจากถูกใจแล้ว");
+        });
+      });
+      // เพิ่มลงตะกร้า
+      document.getElementById("cartBtn").addEventListener("click", function () {
+        if (!currentProduct) return;
+        postJSON('/api/cart', { productId: currentProduct.id, qty: parseInt(qtyVal.textContent, 10) || 1 }).then(function (res) {
+          if (!res.ok) { toast(res.d.error || "เพิ่มไม่สำเร็จ"); return; }
+          setCartBadge(res.d.count);
+          toast("เพิ่มลงตะกร้าแล้ว");
+        });
+      });
+      // ซื้อสินค้า (สร้างออเดอร์)
+      document.getElementById("buyBtn").addEventListener("click", function () {
+        if (!currentProduct) return;
+        postJSON('/api/orders', { productId: currentProduct.id, qty: parseInt(qtyVal.textContent, 10) || 1 }).then(function (res) {
+          if (!res.ok) { toast(res.d.error || "สั่งซื้อไม่สำเร็จ"); return; }
+          closeDetail();
+          openPayment(res.d.order.id);
+        });
+      });
+      // แชทกับผู้ขาย → ไปหน้าแชท
+      document.getElementById("chatBtn").addEventListener("click", function () {
+        if (!currentProduct) return;
+        location.href = "chat.html?product=" + encodeURIComponent(currentProduct.id) + "&name=" + encodeURIComponent(currentProduct.ownerName || "ผู้ขาย");
+      });
+      // แชร์ (คัดลอกลิงก์)
+      document.getElementById("shareBtn").addEventListener("click", function () {
+        var url = location.origin + "/shop.html";
+        if (navigator.share) { navigator.share({ title: currentProduct ? currentProduct.name : "DUDEHUM", url: url }).catch(function(){}); }
+        else if (navigator.clipboard) { navigator.clipboard.writeText(url).then(function(){ toast("คัดลอกลิงก์แล้ว"); }); }
+        else { toast(url); }
+      });
+      // ดูร้านค้า (กรองเฉพาะสินค้าร้านนี้)
+      document.getElementById("viewShopBtn").addEventListener("click", function () {
+        if (!currentProduct) return;
+        var owner = currentProduct.ownerName;
+        closeDetail();
+        var mine = loadedProducts.filter(function (x) { return x.ownerName === owner; });
+        recoBox.innerHTML = '<div class="s-shopbar">สินค้าจากร้าน <b>' + esc(owner) + '</b> <button type="button" class="link" id="resetShop">ดูสินค้าทั้งหมด</button></div>' + mine.map(productCard).join("");
+        document.getElementById("resetShop").addEventListener("click", loadProducts);
+      });
+
+      // ---- ตะกร้า (header cart → modal) ----
+      var cartModal = document.getElementById("cartModal");
+      var cartBadge = document.getElementById("cartBadge");
+      function setCartBadge(n){ n = n || 0; cartBadge.textContent = n; cartBadge.style.display = n > 0 ? "" : "none"; }
+      function loadCartCount(){ fetch('/api/cart', {credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){ setCartBadge(d.count); }).catch(function(){}); }
+      function renderCart(){
+        fetch('/api/cart', {credentials:'same-origin'}).then(function(r){return r.json();}).then(function(d){
+          var items = d.items || [];
+          setCartBadge(d.count);
+          document.getElementById("cartTotal").textContent = "฿" + (d.total || 0);
+          if (!items.length) { document.getElementById("cartList").innerHTML = '<div class="s-empty">ตะกร้าว่างเปล่า</div>'; return; }
+          document.getElementById("cartList").innerHTML = items.map(function (it) {
+            var media = it.image ? '<img src="' + esc(it.image) + '" alt="">' : ic(it.icon);
+            return '<div class="s-cart-item"><div class="s-cart-item__img">' + media + '</div>' +
+              '<div class="s-cart-item__info"><div class="s-cart-item__name">' + esc(it.name) + '</div>' +
+              '<div class="s-cart-item__price">฿' + it.price + ' × ' + it.qty + '</div></div>' +
+              '<button class="s-cart-item__del" type="button" data-id="' + esc(it.id) + '">ลบ</button></div>';
+          }).join("");
+        });
+      }
+      document.getElementById("cartIcon").addEventListener("click", function (e) { e.preventDefault(); renderCart(); cartModal.classList.add("open"); });
+      document.getElementById("cartClose").addEventListener("click", function () { cartModal.classList.remove("open"); });
+      cartModal.addEventListener("click", function (e) { if (e.target === cartModal) cartModal.classList.remove("open"); });
+      document.getElementById("cartList").addEventListener("click", function (e) {
+        var btn = e.target.closest(".s-cart-item__del"); if (!btn) return;
+        fetch('/api/cart/' + encodeURIComponent(btn.getAttribute("data-id")), { method:"DELETE", credentials:"same-origin" }).then(function(){ renderCart(); });
+      });
+      document.getElementById("checkoutBtn").addEventListener("click", function () {
+        postJSON('/api/orders', { fromCart: true }).then(function (res) {
+          if (!res.ok) { toast(res.d.error || "สั่งซื้อไม่สำเร็จ"); return; }
+          cartModal.classList.remove("open");
+          setCartBadge(0);
+          openPayment(res.d.order.id);
+        });
+      });
+
+      // ---- ชำระเงินพร้อมเพย์ ----
+      var payModal = document.getElementById("payModal");
+      var payBody = document.getElementById("payBody");
+      function openPayment(orderId){
+        payBody.innerHTML = '<div class="s-pay-loading">กำลังโหลด...</div>';
+        payModal.classList.add("open");
+        fetch('/api/pay/' + encodeURIComponent(orderId), { credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d.promptpay) {
+              payBody.innerHTML = '<div class="s-pay-nopp">ผู้ขาย <b>' + esc(d.sellerName) + '</b> ยังไม่ได้ตั้งค่าพร้อมเพย์<br>ติดต่อผู้ขายผ่านแชทได้เลย</div>' +
+                '<div class="s-pay-amt">฿' + d.amount + '</div>';
+              return;
+            }
+            function fmtPP(n){ n = String(n || ""); return n.length === 10 ? n.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3") : n.replace(/(\d)(?=(\d{4})+$)/g, "$1 "); }
+            payBody.innerHTML =
+              '<div class="s-pay-recipient">' +
+                '<span class="s-pay-recipient__label">ผู้รับเงิน (พร้อมเพย์)</span>' +
+                '<span class="s-pay-recipient__name">' + esc(d.sellerName) + '</span>' +
+                '<span class="s-pay-recipient__pp">' + esc(fmtPP(d.promptpay)) + '</span>' +
+              '</div>' +
+              '<div class="s-pay-qr" id="payQr">กำลังสร้าง QR...</div>' +
+              '<div class="s-pay-amt">฿' + d.amount + '</div>' +
+              '<div class="s-pay-warn">โปรดตรวจสอบว่าชื่อผู้รับในแอปธนาคารตรงกับด้านบน ก่อนกดโอน</div>' +
+              (d.paid ? '<div class="s-pay-done">ชำระเงินแล้ว</div>' : '<button class="btn btn--primary btn--block" id="payDone" type="button">ยืนยันว่าโอนแล้ว</button>');
+            // สร้าง QR ในเครื่อง (ไม่ส่งข้อมูลออกเน็ต)
+            try {
+              var q = qrcode(0, "M"); q.addData(d.payload, "Byte"); q.make();
+              document.getElementById("payQr").innerHTML = '<img src="' + q.createDataURL(6, 2) + '" alt="PromptPay QR">';
+            } catch (e) { document.getElementById("payQr").textContent = "สร้าง QR ไม่สำเร็จ"; }
+            var pd = document.getElementById("payDone");
+            if (pd) pd.addEventListener("click", function () {
+              postJSON('/api/pay/' + encodeURIComponent(orderId)).then(function (res) {
+                if (res.ok) { payModal.classList.remove("open"); toast("ยืนยันการชำระเงินแล้ว ขอบคุณครับ"); }
+                else toast(res.d.error || "ผิดพลาด");
+              });
+            });
+          })
+          .catch(function () { payBody.innerHTML = '<div class="s-pay-nopp">โหลดข้อมูลชำระเงินไม่สำเร็จ</div>'; });
+      }
+      document.getElementById("payClose").addEventListener("click", function () { payModal.classList.remove("open"); });
+      payModal.addEventListener("click", function (e) { if (e.target === payModal) payModal.classList.remove("open"); });
+
+      // init
+      loadFavorites();
+      loadCartCount();
 
       // Modal ลงขายสินค้า
       var sellModal = document.getElementById("sellModal");

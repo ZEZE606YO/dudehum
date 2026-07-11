@@ -59,8 +59,16 @@ Utilities: `readUsers` L39 · `readPending` L48 · `readReset` L66 · `hashPassw
 | POST | `/api/products` | ~L397 | ลงขายสินค้า (ต้อง login; owner = user; รับ `image` เป็น data-URL ได้) |
 | DELETE | `/api/products/{id}` | ~L432 | ลบสินค้าของตัวเอง (เช็ค owner + ลบไฟล์รูป) |
 | GET | `/uploads/{file}` | (นอก /api) | เสิร์ฟรูปสินค้าที่อัปโหลด (`serveUploads`) |
+| GET/POST | `/api/favorites` | | ดู/toggle ถูกใจ (`favorites.json` = {email:[pid]}) |
+| GET/POST | `/api/cart` · DELETE `/api/cart/{id}` | | ตะกร้าต่อ user (`cart.json` = {email:[{id,qty}]}) |
+| GET/POST | `/api/orders` | | ออเดอร์ (`orders.json`); POST รับ `{productId,qty}` หรือ `{fromCart:true}` |
+| POST | `/api/messages` | | ส่งข้อความแชท: `{productId,text}` เริ่มจากสินค้า หรือ `{convId,text}` ตอบในห้อง |
+| GET | `/api/chats` | | รายการห้องสนทนาของ user (otherName, lastText, unread) |
+| GET | `/api/chats/{convId}` | | ข้อความในห้อง + mark read (`messages.json`, helper `convOf`/`userName`) |
+| GET/POST | `/api/profile` | | ตั้ง/ดูพร้อมเพย์ของผู้ขาย (`profiles.json`, `normalizePromptpay`) |
+| GET/POST | `/api/pay/{orderId}` | | GET=ข้อมูล QR (promptpay+ยอด+ผู้ขาย) · POST=mark paid |
 
-Storage สินค้า: `readProducts`/`writeProducts` (ไฟล์ `server/data/products.json`) · helper `sessionUser(req)` = คืน user จาก cookie
+Storage: `readProducts`/`writeProducts` (`products.json`) · generic `readJsonFile`/`writeJsonFile` (fav/cart/orders/messages) · `findProduct(id)` · `sessionUser(req)` = user จาก cookie
 **รูปสินค้า**: อัปโหลดจากเครื่อง → บีบอัดฝั่ง client (canvas) → ส่ง data-URL → `saveProductImage()` เก็บไฟล์ที่ `server/data/uploads/` → เก็บ path `/uploads/xxx` ใน product.image. `readBody` cap = 8MB
 
 ค่าคงที่ OTP อยู่บนสุด: `OTP_TTL_MS` (10นาที), `OTP_MAX_ATTEMPTS` (5), `RESEND_COOLDOWN_MS` (60วิ)
@@ -76,7 +84,13 @@ Session = httpOnly cookie `dh_session` เซ็นด้วย HMAC (secret ท
 **account.html**: hero L35 · stat cards L43 · orders L62. Guard + logout ใน `<script>` ท้ายไฟล์ (ต้อง login ก่อน)
 
 **shop.html**: Header L14 · Banners L65 · Quick nav L86 · Categories L99 · Flash sale L105 · Recommended L115. ข้อมูล+ไอคอนใน `<script>`: `ICONS` (map), `cats` (20), `products` (12), `ic(name)` (สร้าง `<svg class="icon">`)
-> **ระบบสินค้า User ลงขายเอง**: ส่วน "สินค้าในร้าน" (`#recoProducts`) โหลดจาก `GET /api/products` ผ่าน `loadProducts()` + `productCard(p)` (มี `esc()` กัน XSS; แสดง `<img>` ถ้ามี `p.image` ไม่งั้นใช้ไอคอน). ปุ่ม `#sellBtn` เปิด modal `#sellModal` (ฟอร์ม `#sellForm`: อัปโหลดรูป `#imgInput` → `compressImage()` → `pendingImage`; หรือเลือกไอคอน `#iconSelect` จาก `ICON_LABELS`). ลบสินค้าของตัวเองผ่านปุ่ม `.s-del`.
+> **ระบบสินค้า User ลงขายเอง**: ส่วน "สินค้าในร้าน" (`#recoProducts`) โหลดจาก `GET /api/products` ผ่าน `loadProducts()` + `productCard(p)` (มี `esc()` กัน XSS; แสดง `<img>` ถ้ามี `p.image` ไม่งั้นใช้ไอคอน). ปุ่ม `#sellBtn` เปิด modal `#sellModal` (ฟอร์ม `#sellForm`: อัปโหลดรูป `#imgInput` → `compressImage()` → `pendingImage`; หรือเลือกไอคอน `#iconSelect` จาก `ICON_LABELS`). ลบสินค้าของตัวเองผ่านปุ่ม `.s-del`. **กดการ์ด → เปิดหน้ารายละเอียดสไตล์ Shopee** `#detailModal` ผ่าน `openDetail(p)` (ใช้ข้อมูลจาก `loadedProducts`; การ์ดมี `data-id`; ปุ่มลบไม่เปิด detail). มี: รูปใหญ่, เรตติ้ง(mock), **Flash Sale banner + นับถอยหลัง** `#dTimer` (`startTimer`/`stopTimer`, โชว์เฉพาะมีส่วนลด, `.s-detail__flash.on`), ตัวเลือกจำนวน `#qtyVal`, ปุ่มรถเข็น/ซื้อ, การ์ดผู้ขาย, รายละเอียด. **ปุ่มทุกอันต่อ backend จริงแล้ว**: ถูกใจ `#favBtn` (toggle + `favSet`/`updateFavHeart`), เพิ่มตะกร้า `#cartBtn`, ซื้อ `#buyBtn` (สร้างออเดอร์), แชท `#chatBtn` (prompt→`/api/messages`), แชร์ `#shareBtn` (copy link), ดูร้านค้า `#viewShopBtn` (กรอง `loadedProducts` ตาม owner + `.s-shopbar`). ตะกร้า: ไอคอนหัวเว็บ `#cartIcon` → `#cartModal` (renderCart/checkout), badge `#cartBadge` (`setCartBadge`/`loadCartCount`). แจ้งเตือน = `toast()` (`#toast`). helper `postJSON()`. CSS `.s-detail__*`/`.s-seller__*`/`.s-cart-*`/`.s-toast` ใน shop.css
+
+**account.html**: "คำสั่งซื้อล่าสุด" `#orders` โหลดจริงจาก `GET /api/orders` + อัปเดตสถิติ `#statOrders` + **ตั้งค่าพร้อมเพย์** `#ppInput`/`#ppSave` (`GET/POST /api/profile`) (ในสคริปต์ท้ายไฟล์)
+
+**ชำระเงินพร้อมเพย์ (offline 100%)**: ซื้อ/checkout → `openPayment(orderId)` เปิด `#payModal`. Server คำนวณ payload EMVCo เอง (`promptpayPayload`+`crc16ccitt` ใน server.js, verified CRC ถูกต้อง) ส่งใน `GET /api/pay`. Client เรนเดอร์ QR ในเครื่องด้วย **`js/qrcode.js`** (qrcode-generator MIT, บันเดิลไว้ — ไม่พึ่งบริการนอก, เลขพร้อมเพย์ไม่ออกเน็ต). แสดง **ชื่อผู้รับ** `.s-pay-recipient` + คำเตือนให้ตรวจสอบชื่อในแอปธนาคาร + ปุ่ม "ยืนยันว่าโอนแล้ว" (`POST /api/pay/{id}`). ผู้ขายต้องตั้งพร้อมเพย์ในหน้าบัญชีก่อน
+
+**chat.html** (+ `css/chat.css`): หน้าแชทเต็ม — ซ้ายรายการห้อง `#chatList` (`loadChats`), ขวาห้องสนทนา `#messages`+`#chatForm` (`openConv`/`renderMessages`). เข้าจาก: ปุ่ม "แชทเลย" ในสินค้า → `chat.html?product={id}&name={owner}` (`openPending`) หรือเมนูผู้ใช้ในหน้า shop. polling ทุก 4 วิ. auth-guarded
 > demo Flash Sale ถูกซ่อน (`#flashSaleCard` display:none) — ตัวแปร `products`/`card()` เดิมยังอยู่แต่ไม่ได้ใช้
 
 ---

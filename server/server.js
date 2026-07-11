@@ -23,6 +23,11 @@ const USERS_FILE = path.join(DATA_DIR, "users.json");
 const PENDING_FILE = path.join(DATA_DIR, "pending.json");
 const RESET_FILE = path.join(DATA_DIR, "reset.json");
 const PRODUCTS_FILE = path.join(DATA_DIR, "products.json");
+const FAV_FILE = path.join(DATA_DIR, "favorites.json");    // { email: [productId,...] }
+const CART_FILE = path.join(DATA_DIR, "cart.json");        // { email: [{id, qty},...] }
+const ORDERS_FILE = path.join(DATA_DIR, "orders.json");    // [ {id, email, items, total,...} ]
+const MSG_FILE = path.join(DATA_DIR, "messages.json");     // [ {id, fromEmail, toEmail,...} ]
+const PROFILES_FILE = path.join(DATA_DIR, "profiles.json"); // { email: { promptpay } }
 const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
 const SECRET_FILE = path.join(DATA_DIR, "secret.key");
 const COOKIE = "dh_session";
@@ -93,6 +98,55 @@ function readProducts() {
 }
 function writeProducts(list) {
   fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(list, null, 2));
+}
+/* Generic JSON store (favorites/cart/orders/messages) */
+function readJsonFile(file, fallback) {
+  try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch (e) { return fallback; }
+}
+function writeJsonFile(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+}
+/* Look up a product by id (or null) */
+function findProduct(id) {
+  return readProducts().find((p) => p.id === id) || null;
+}
+/* Display name of a user by email */
+function userName(email) {
+  const u = readUsers().find((x) => x.email === email);
+  return u ? u.name : email;
+}
+/* Stable conversation id for a pair of emails */
+function convOf(a, b) {
+  return crypto.createHash("sha256").update([a, b].sort().join("|")).digest("hex").slice(0, 16);
+}
+/* Normalize a PromptPay id: 10-digit phone or 13-digit national id (digits only) */
+function normalizePromptpay(v) {
+  v = String(v || "").replace(/[^0-9]/g, "");
+  return (v.length === 10 || v.length === 13) ? v : "";
+}
+/* PromptPay EMVCo QR payload (คำนวณเองในเครื่อง ไม่พึ่งบริการนอก) */
+function ppTLV(id, val) { return id + String(val.length).padStart(2, "0") + val; }
+function crc16ccitt(s) {
+  let crc = 0xFFFF;
+  for (let i = 0; i < s.length; i++) {
+    crc ^= s.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+  }
+  return crc.toString(16).toUpperCase().padStart(4, "0");
+}
+function promptpayPayload(id, amount) {
+  const n = String(id).replace(/[^0-9]/g, "");
+  const type = n.length >= 15 ? "03" : n.length >= 13 ? "02" : "01";
+  const val = n.length >= 13 ? n : ("0000000000000" + n.replace(/^0/, "66")).slice(-13);
+  const merchant = ppTLV("29", ppTLV("00", "A000000677010111") + ppTLV(type, val));
+  let p = ppTLV("00", "01") +
+    ppTLV("01", amount > 0 ? "12" : "11") +
+    merchant +
+    ppTLV("58", "TH") +
+    ppTLV("53", "764") +
+    (amount > 0 ? ppTLV("54", Number(amount).toFixed(2)) : "");
+  p += "6304";
+  return p + crc16ccitt(p);
 }
 /* Current logged-in user from cookie, or null */
 function sessionUser(req) {
@@ -460,6 +514,203 @@ async function handleApi(req, res, url) {
     if (item.image) { try { fs.unlinkSync(path.join(UPLOADS_DIR, path.basename(item.image))); } catch (e) {} }
     writeProducts(list.filter((p) => p.id !== id));
     return json(res, 200, { ok: true });
+  }
+
+  // ---- Favorites (ถูกใจ) ----
+  if (route === "/api/favorites" && req.method === "GET") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 200, { favorites: [] });
+    const all = readJsonFile(FAV_FILE, {});
+    return json(res, 200, { favorites: all[me.email] || [] });
+  }
+  if (route === "/api/favorites" && req.method === "POST") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const b = await readBody(req);
+    const pid = String(b.productId || "");
+    if (!findProduct(pid)) return json(res, 404, { error: "ไม่พบสินค้า" });
+    const all = readJsonFile(FAV_FILE, {});
+    const list = all[me.email] || [];
+    let favorited;
+    if (list.indexOf(pid) >= 0) { all[me.email] = list.filter((x) => x !== pid); favorited = false; }
+    else { list.push(pid); all[me.email] = list; favorited = true; }
+    writeJsonFile(FAV_FILE, all);
+    return json(res, 200, { favorited: favorited, count: (all[me.email] || []).length });
+  }
+
+  // ---- Cart (ตะกร้า) ----
+  if (route === "/api/cart" && req.method === "GET") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 200, { items: [], total: 0, count: 0 });
+    const raw = readJsonFile(CART_FILE, {})[me.email] || [];
+    const items = raw.map((it) => {
+      const p = findProduct(it.id);
+      return p ? { id: p.id, name: p.name, price: p.price, image: p.image || null, icon: p.icon, qty: it.qty } : null;
+    }).filter(Boolean);
+    const total = items.reduce((s, it) => s + it.price * it.qty, 0);
+    const count = items.reduce((s, it) => s + it.qty, 0);
+    return json(res, 200, { items: items, total: total, count: count });
+  }
+  if (route === "/api/cart" && req.method === "POST") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const b = await readBody(req);
+    const pid = String(b.productId || "");
+    const qty = Math.max(1, Math.min(99, Math.round(Number(b.qty) || 1)));
+    if (!findProduct(pid)) return json(res, 404, { error: "ไม่พบสินค้า" });
+    const all = readJsonFile(CART_FILE, {});
+    const list = all[me.email] || [];
+    const ex = list.find((x) => x.id === pid);
+    if (ex) ex.qty = Math.min(99, ex.qty + qty); else list.push({ id: pid, qty: qty });
+    all[me.email] = list;
+    writeJsonFile(CART_FILE, all);
+    return json(res, 200, { ok: true, count: list.reduce((s, x) => s + x.qty, 0) });
+  }
+  if (route.startsWith("/api/cart/") && req.method === "DELETE") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const pid = decodeURIComponent(route.slice("/api/cart/".length));
+    const all = readJsonFile(CART_FILE, {});
+    all[me.email] = (all[me.email] || []).filter((x) => x.id !== pid);
+    writeJsonFile(CART_FILE, all);
+    return json(res, 200, { ok: true });
+  }
+
+  // ---- Orders (สั่งซื้อ) ----
+  if (route === "/api/orders" && req.method === "GET") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 200, { orders: [] });
+    const orders = readJsonFile(ORDERS_FILE, []).filter((o) => o.email === me.email);
+    return json(res, 200, { orders: orders });
+  }
+  if (route === "/api/orders" && req.method === "POST") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const b = await readBody(req);
+    let items = [];
+    if (b.fromCart) {
+      const cart = readJsonFile(CART_FILE, {})[me.email] || [];
+      items = cart.map((it) => { const p = findProduct(it.id); return p ? { id: p.id, name: p.name, price: p.price, icon: p.icon, image: p.image || null, qty: it.qty } : null; }).filter(Boolean);
+    } else {
+      const p = findProduct(String(b.productId || ""));
+      if (!p) return json(res, 404, { error: "ไม่พบสินค้า" });
+      const qty = Math.max(1, Math.min(99, Math.round(Number(b.qty) || 1)));
+      items = [{ id: p.id, name: p.name, price: p.price, icon: p.icon, image: p.image || null, qty: qty }];
+    }
+    if (!items.length) return json(res, 400, { error: "ไม่มีสินค้าให้สั่งซื้อ" });
+    const order = {
+      id: "DH-" + Date.now().toString().slice(-6),
+      email: me.email, items: items,
+      total: items.reduce((s, it) => s + it.price * it.qty, 0),
+      status: "รอชำระเงิน", paid: false, createdAt: Date.now()
+    };
+    const orders = readJsonFile(ORDERS_FILE, []);
+    orders.unshift(order);
+    writeJsonFile(ORDERS_FILE, orders);
+    if (b.fromCart) { const cart = readJsonFile(CART_FILE, {}); cart[me.email] = []; writeJsonFile(CART_FILE, cart); }
+    return json(res, 200, { order: order });
+  }
+
+  // ---- Chat / Messages ----
+  // ส่งข้อความ: {productId,text} เริ่มจากสินค้า | {convId,text} ตอบในห้องเดิม
+  if (route === "/api/messages" && req.method === "POST") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const b = await readBody(req);
+    const text = String(b.text || "").trim().slice(0, 1000);
+    if (!text) return json(res, 400, { error: "กรุณาพิมพ์ข้อความ" });
+    const msgs = readJsonFile(MSG_FILE, []);
+    let to = "", productId = "", productName = "";
+    if (b.productId) {
+      const p = findProduct(String(b.productId));
+      if (!p) return json(res, 404, { error: "ไม่พบสินค้า" });
+      to = p.ownerEmail; productId = p.id; productName = p.name;
+    } else if (b.convId) {
+      const prev = msgs.find((m) => m.convId === String(b.convId) && (m.from === me.email || m.to === me.email));
+      if (!prev) return json(res, 404, { error: "ไม่พบห้องสนทนา" });
+      to = prev.from === me.email ? prev.to : prev.from;
+    } else {
+      return json(res, 400, { error: "ข้อมูลไม่ครบ" });
+    }
+    if (to === me.email) return json(res, 400, { error: "ส่งข้อความหาตัวเองไม่ได้" });
+    const convId = convOf(me.email, to);
+    const msg = { id: "m_" + crypto.randomBytes(5).toString("hex"), convId: convId, from: me.email, to: to, fromName: me.name, toName: userName(to), text: text, productId: productId, productName: productName, read: false, createdAt: Date.now() };
+    msgs.push(msg);
+    writeJsonFile(MSG_FILE, msgs);
+    return json(res, 200, { message: { id: msg.id, text: text, mine: true, createdAt: msg.createdAt }, convId: convId });
+  }
+
+  // รายการห้องสนทนา
+  if (route === "/api/chats" && req.method === "GET") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 200, { chats: [] });
+    const msgs = readJsonFile(MSG_FILE, []).filter((m) => m.from === me.email || m.to === me.email);
+    const byConv = {};
+    msgs.forEach((m) => {
+      const otherName = m.from === me.email ? m.toName : m.fromName;
+      if (!byConv[m.convId]) byConv[m.convId] = { convId: m.convId, otherName: otherName, lastText: "", lastAt: 0, unread: 0 };
+      const c = byConv[m.convId];
+      if (m.createdAt >= c.lastAt) { c.lastAt = m.createdAt; c.lastText = m.text; c.otherName = otherName; }
+      if (m.to === me.email && !m.read) c.unread += 1;
+    });
+    const chats = Object.keys(byConv).map((k) => byConv[k]).sort((a, b) => b.lastAt - a.lastAt);
+    return json(res, 200, { chats: chats });
+  }
+
+  // ข้อความในห้อง + mark read
+  if (route.startsWith("/api/chats/") && req.method === "GET") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const convId = decodeURIComponent(route.slice("/api/chats/".length));
+    const all = readJsonFile(MSG_FILE, []);
+    const mine = all.filter((m) => m.convId === convId && (m.from === me.email || m.to === me.email));
+    let changed = false;
+    mine.forEach((m) => { if (m.to === me.email && !m.read) { m.read = true; changed = true; } });
+    if (changed) writeJsonFile(MSG_FILE, all);
+    const otherName = mine.length ? (mine[0].from === me.email ? mine[0].toName : mine[0].fromName) : "";
+    const messages = mine.sort((a, b) => a.createdAt - b.createdAt).map((m) => ({ id: m.id, text: m.text, mine: m.from === me.email, createdAt: m.createdAt, productName: m.productName }));
+    return json(res, 200, { convId: convId, otherName: otherName, messages: messages });
+  }
+
+  // ---- Profile: พร้อมเพย์ของผู้ขาย ----
+  if (route === "/api/profile" && req.method === "GET") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 200, { promptpay: "" });
+    const prof = readJsonFile(PROFILES_FILE, {})[me.email] || {};
+    return json(res, 200, { promptpay: prof.promptpay || "" });
+  }
+  if (route === "/api/profile" && req.method === "POST") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const b = await readBody(req);
+    const pp = normalizePromptpay(b.promptpay);
+    if (b.promptpay && !pp) return json(res, 400, { error: "พร้อมเพย์ต้องเป็นเบอร์มือถือ 10 หลัก หรือเลขบัตรประชาชน 13 หลัก" });
+    const all = readJsonFile(PROFILES_FILE, {});
+    all[me.email] = Object.assign(all[me.email] || {}, { promptpay: pp });
+    writeJsonFile(PROFILES_FILE, all);
+    return json(res, 200, { ok: true, promptpay: pp });
+  }
+
+  // ---- Payment: ข้อมูล QR + mark paid ----
+  if (route.startsWith("/api/pay/") && (req.method === "GET" || req.method === "POST")) {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const orderId = decodeURIComponent(route.slice("/api/pay/".length));
+    const orders = readJsonFile(ORDERS_FILE, []);
+    const order = orders.find((o) => o.id === orderId && o.email === me.email);
+    if (!order) return json(res, 404, { error: "ไม่พบคำสั่งซื้อ" });
+    if (req.method === "POST") {                       // ผู้ซื้อกดยืนยันว่าโอนแล้ว
+      order.paid = true; order.status = "ชำระเงินแล้ว";
+      writeJsonFile(ORDERS_FILE, orders);
+      return json(res, 200, { ok: true });
+    }
+    const first = order.items[0] || {};
+    const p = findProduct(first.id);
+    const sellerEmail = p ? p.ownerEmail : null;
+    const promptpay = sellerEmail ? ((readJsonFile(PROFILES_FILE, {})[sellerEmail] || {}).promptpay || "") : "";
+    const sellerName = sellerEmail ? userName(sellerEmail) : "ผู้ขาย";
+    const payload = promptpay ? promptpayPayload(promptpay, order.total) : "";
+    return json(res, 200, { orderId: order.id, amount: order.total, promptpay: promptpay, payload: payload, sellerName: sellerName, paid: !!order.paid });
   }
 
   return json(res, 404, { error: "not found" });

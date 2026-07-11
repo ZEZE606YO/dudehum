@@ -47,7 +47,7 @@
         </div>
         <div class="stat">
           <span class="stat__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4"/><path d="M12 11v10"/></svg></span>
-          <span class="stat__num">8</span><span class="stat__label">คำสั่งซื้อ</span>
+          <span class="stat__num" id="statOrders">0</span><span class="stat__label">คำสั่งซื้อ</span>
         </div>
         <div class="stat">
           <span class="stat__icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M12 7v10" stroke-dasharray="1.5 2.5"/></svg></span>
@@ -60,42 +60,17 @@
       </section>
 
       <section class="account__panel">
-        <h2>คำสั่งซื้อล่าสุด</h2>
-        <div class="orders">
-          <div class="order">
-            <span class="order__thumb">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2.5"/><path d="M9.5 7l.7-3h3.6l.7 3M9.5 17l.7 3h3.6l.7-3"/></svg>
-            </span>
-            <div class="order__info">
-              <strong>สมาร์ทวอทช์ รุ่นใหม่</strong>
-              <span>#DH-10293 • 5 ก.ค. 2026</span>
-            </div>
-            <span class="order__price">฿790</span>
-            <span class="badge-status is-done">จัดส่งแล้ว</span>
-          </div>
-          <div class="order">
-            <span class="order__thumb">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><rect x="3" y="13" width="4" height="6.5" rx="1.5"/><rect x="17" y="13" width="4" height="6.5" rx="1.5"/></svg>
-            </span>
-            <div class="order__info">
-              <strong>หูฟังไร้สาย Pro</strong>
-              <span>#DH-10188 • 2 ก.ค. 2026</span>
-            </div>
-            <span class="order__price">฿590</span>
-            <span class="badge-status is-ship">กำลังจัดส่ง</span>
-          </div>
-          <div class="order">
-            <span class="order__thumb">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="16" height="9" rx="2"/><path d="M21 11.5v2"/><path d="M7 12.5h4"/></svg>
-            </span>
-            <div class="order__info">
-              <strong>พาวเวอร์แบงก์ 20000mAh</strong>
-              <span>#DH-10077 • 28 มิ.ย. 2026</span>
-            </div>
-            <span class="order__price">฿450</span>
-            <span class="badge-status is-done">จัดส่งแล้ว</span>
-          </div>
+        <h2>ตั้งค่ารับเงิน (พร้อมเพย์)</h2>
+        <div class="pp-row">
+          <input id="ppInput" class="pp-input" placeholder="เบอร์พร้อมเพย์ 10 หลัก หรือเลขบัตร 13 หลัก" inputmode="numeric" maxlength="13" />
+          <button class="btn btn--primary btn--sm" id="ppSave" type="button">บันทึก</button>
         </div>
+        <p class="pp-hint" id="ppMsg">ตั้งค่าเพื่อให้ผู้ซื้อโอนเงินให้คุณผ่าน QR พร้อมเพย์เมื่อสั่งซื้อสินค้าของคุณ</p>
+      </section>
+
+      <section class="account__panel">
+        <h2>คำสั่งซื้อล่าสุด</h2>
+        <div class="orders" id="orders"></div>
       </section>
     </div>
   </main>
@@ -113,6 +88,44 @@
       document.getElementById("logoutBtn").addEventListener("click", async function () {
         await Auth.logout();
         window.location.href = "index.html";
+      });
+
+      // โหลดคำสั่งซื้อจริง
+      function esc(x){ return String(x == null ? "" : x).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+      try {
+        var d = await (await fetch('/api/orders', { credentials: 'same-origin' })).json();
+        var orders = d.orders || [];
+        var statOrders = document.getElementById("statOrders");
+        if (statOrders) statOrders.textContent = orders.length;
+        var ob = document.getElementById("orders");
+        if (!orders.length) {
+          ob.innerHTML = '<div class="orders-empty">ยังไม่มีคำสั่งซื้อ — ไปช้อปที่หน้าร้านได้เลย</div>';
+        } else {
+          ob.innerHTML = orders.map(function (o) {
+            var it = o.items[0] || {};
+            var media = it.image
+              ? '<img src="' + esc(it.image) + '" alt="">'
+              : '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4"/><path d="M12 11v10"/></svg>';
+            var more = o.items.length > 1 ? ' และอีก ' + (o.items.length - 1) + ' รายการ' : '';
+            var date = new Date(o.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+            return '<div class="order"><span class="order__thumb">' + media + '</span>' +
+              '<div class="order__info"><strong>' + esc(it.name || 'สินค้า') + more + '</strong>' +
+              '<span>#' + esc(o.id) + ' • ' + date + '</span></div>' +
+              '<span class="order__price">฿' + o.total + '</span>' +
+              '<span class="badge-status is-ship">' + esc(o.status || 'รอดำเนินการ') + '</span></div>';
+          }).join("");
+        }
+      } catch (e) {}
+
+      // ตั้งค่าพร้อมเพย์
+      var ppInput = document.getElementById("ppInput");
+      var ppMsg = document.getElementById("ppMsg");
+      ppInput.addEventListener("input", function () { this.value = this.value.replace(/[^0-9]/g, ""); });
+      try { var pd = await (await fetch('/api/profile', { credentials: 'same-origin' })).json(); if (pd.promptpay) ppInput.value = pd.promptpay; } catch (e) {}
+      document.getElementById("ppSave").addEventListener("click", function () {
+        fetch('/api/profile', { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ promptpay: ppInput.value }) })
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) { ppMsg.textContent = res.ok ? "บันทึกพร้อมเพย์แล้ว" : (res.d.error || "บันทึกไม่สำเร็จ"); ppMsg.style.color = res.ok ? "#16b364" : "#e5484d"; });
       });
     })();
   </script>

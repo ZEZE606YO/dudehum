@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>แชท — DUDEHUM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/chat.css" />
+</head>
+<body class="chat-body">
+  <header class="chat-header">
+    <a href="shop.html" class="chat-header__back">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      กลับไปช้อป
+    </a>
+    <span class="chat-header__title">แชท</span>
+    <span class="chat-header__spacer"></span>
+    <img class="brand__logo" src="assets/logo-white.svg" alt="DH Group" />
+  </header>
+
+  <main class="chat" id="chatWrap">
+    <aside class="chat__list">
+      <div class="chat__list-head">ข้อความ</div>
+      <div id="chatList"></div>
+    </aside>
+
+    <section class="chat__room">
+      <div class="chat__room-head" id="roomHead" style="display:none">
+        <button class="chat__room-back" id="roomBack" type="button" aria-label="กลับ">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <span class="chat-conv__avatar" id="roomAvatar">U</span>
+        <span id="roomName"></span>
+      </div>
+      <div class="chat__messages" id="messages">
+        <div class="chat__placeholder" id="placeholder">เลือกห้องสนทนาทางซ้าย<br />หรือกด “แชทเลย” ที่สินค้าเพื่อเริ่มคุยกับผู้ขาย</div>
+      </div>
+      <form class="chat__input" id="chatForm" style="display:none">
+        <input id="msgInput" placeholder="พิมพ์ข้อความ..." autocomplete="off" maxlength="1000" />
+        <button type="submit" aria-label="ส่ง">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none"><path d="M3 20l18-8L3 4l0 6 12 2-12 2z"/></svg>
+        </button>
+      </form>
+    </section>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>
+    (async function () {
+      var user = await Auth.requireAuth("login.html");
+      if (!user) return;
+
+      var params = new URLSearchParams(location.search);
+      var currentConv = null;
+      var pendingProduct = params.get("product");   // เริ่มแชทจากสินค้า
+      var pendingName = params.get("name") || "ผู้ขาย";
+
+      var wrap = document.getElementById("chatWrap");
+      var listEl = document.getElementById("chatList");
+      var msgsEl = document.getElementById("messages");
+      var headEl = document.getElementById("roomHead");
+      var formEl = document.getElementById("chatForm");
+      var inputEl = document.getElementById("msgInput");
+      var placeholder = document.getElementById("placeholder");
+
+      function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+      function initial(n){ return (String(n || "U").trim().charAt(0) || "U").toUpperCase(); }
+      function fmtTime(ts){ return new Date(ts).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }); }
+
+      function showRoom(name){
+        headEl.style.display = "flex";
+        formEl.style.display = "flex";
+        document.getElementById("roomName").textContent = name;
+        document.getElementById("roomAvatar").textContent = initial(name);
+        wrap.classList.add("show-room");
+      }
+
+      function renderList(chats){
+        if (!chats.length) { listEl.innerHTML = '<div class="chat__list-empty">ยังไม่มีข้อความ</div>'; return; }
+        listEl.innerHTML = chats.map(function (c) {
+          return '<button class="chat-conv' + (c.convId === currentConv ? ' active' : '') + '" data-conv="' + esc(c.convId) + '" data-name="' + esc(c.otherName) + '">' +
+            '<span class="chat-conv__avatar">' + esc(initial(c.otherName)) + '</span>' +
+            '<div class="chat-conv__info"><div class="chat-conv__top"><strong>' + esc(c.otherName) + '</strong><span class="chat-conv__time">' + fmtTime(c.lastAt) + '</span></div>' +
+            '<div class="chat-conv__last">' + esc(c.lastText) + '</div></div>' +
+            (c.unread ? '<span class="chat-conv__badge">' + c.unread + '</span>' : '') +
+            '</button>';
+        }).join("");
+      }
+      function loadChats(){
+        return fetch('/api/chats', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) { renderList(d.chats || []); });
+      }
+
+      function renderMessages(data){
+        placeholder.style.display = "none";
+        var note = "";
+        var withProduct = (data.messages || []).find(function (m) { return m.productName; });
+        if (withProduct) note = '<div class="chat__product-note">กำลังคุยเรื่อง: ' + esc(withProduct.productName) + '</div>';
+        msgsEl.innerHTML = note + (data.messages || []).map(function (m) {
+          return '<div class="msg msg--' + (m.mine ? 'me' : 'them') + '"><div class="msg__bubble">' + esc(m.text) + '</div></div>';
+        }).join("");
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+      }
+
+      function openConv(convId, name){
+        currentConv = convId; pendingProduct = null;
+        showRoom(name);
+        fetch('/api/chats/' + encodeURIComponent(convId), { credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) { document.getElementById("roomName").textContent = d.otherName || name; document.getElementById("roomAvatar").textContent = initial(d.otherName || name); renderMessages(d); loadChats(); });
+      }
+
+      // เริ่มห้องใหม่จากสินค้า (ยังไม่มีข้อความ)
+      function openPending(name){
+        currentConv = null;
+        showRoom(name);
+        placeholder.style.display = "none";
+        msgsEl.innerHTML = '<div class="chat__placeholder">เริ่มการสนทนากับ <b>' + esc(name) + '</b><br />พิมพ์ข้อความแล้วกดส่งได้เลย</div>';
+      }
+
+      listEl.addEventListener("click", function (e) {
+        var btn = e.target.closest(".chat-conv"); if (!btn) return;
+        openConv(btn.getAttribute("data-conv"), btn.getAttribute("data-name"));
+      });
+      document.getElementById("roomBack").addEventListener("click", function () { wrap.classList.remove("show-room"); });
+
+      formEl.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var text = inputEl.value.trim();
+        if (!text) return;
+        var body = currentConv ? { convId: currentConv, text: text } : { productId: pendingProduct, text: text };
+        inputEl.value = "";
+        fetch('/api/messages', { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify(body) })
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) {
+            if (!res.ok) { alert(res.d.error || "ส่งไม่สำเร็จ"); return; }
+            currentConv = res.d.convId;
+            openConv(currentConv, document.getElementById("roomName").textContent);
+          });
+      });
+
+      // เปิดครั้งแรก
+      await loadChats();
+      if (pendingProduct) openPending(pendingName);
+
+      // อัปเดตอัตโนมัติ (polling)
+      setInterval(function () {
+        loadChats();
+        if (currentConv) {
+          fetch('/api/chats/' + encodeURIComponent(currentConv), { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+              var atBottom = msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight < 60;
+              var prevCount = msgsEl.querySelectorAll(".msg").length;
+              if ((d.messages || []).length !== prevCount) { renderMessages(d); if (!atBottom) msgsEl.scrollTop = msgsEl.scrollHeight; }
+            });
+        }
+      }, 4000);
+    })();
+  </script>
+</body>
+</html>

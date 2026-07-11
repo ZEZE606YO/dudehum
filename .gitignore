@@ -4,6 +4,11 @@ server/data/users.json
 server/data/pending.json
 server/data/reset.json
 server/data/products.json
+server/data/favorites.json
+server/data/cart.json
+server/data/orders.json
+server/data/messages.json
+server/data/profiles.json
 server/data/uploads/
 
 # ระบบ
