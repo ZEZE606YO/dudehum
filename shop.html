@@ -29,6 +29,7 @@
               <span class="s-user__avatar" id="userAvatar">U</span>
               <span id="userName">สมาชิก</span> ▾
               <div class="s-user__menu" id="userMenu">
+                <a href="admin.html" id="adminLink" style="display:none">แผงแอดมิน</a>
                 <a href="account.html">บัญชีของฉัน</a>
                 <a href="chat.html">แชท</a>
                 <a href="account.html">คำสั่งซื้อของฉัน</a>
@@ -290,6 +291,7 @@
       var name = user.name || "สมาชิก";
       document.getElementById("userName").textContent = name.split(" ")[0];
       document.getElementById("userAvatar").textContent = name.trim().charAt(0).toUpperCase() || "U";
+      if (user.isAdmin) { var adminLink = document.getElementById("adminLink"); if (adminLink) adminLink.style.display = ""; }
 
       // เมนูผู้ใช้
       var userBtn = document.getElementById("userBtn");

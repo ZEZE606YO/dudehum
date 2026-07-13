@@ -66,6 +66,35 @@
 .chat__input button .icon { width: 20px; height: 20px; }
 .chat__input button:disabled { opacity: .5; cursor: default; }
 
+/* ---- Report button in room head ---- */
+.chat__report { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; background: none; border: 1px solid var(--border); color: var(--text-soft); border-radius: 999px; padding: 6px 13px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.chat__report:hover { border-color: #e5484d; color: #e5484d; }
+.chat__report .icon { width: 15px; height: 15px; }
+
+/* ---- "คนกลาง" warning banner (โผล่ในห้องแชท) ---- */
+.chat__warn { display: flex; gap: 9px; align-items: flex-start; background: color-mix(in srgb, var(--brand) 9%, #fff); border: 1px solid color-mix(in srgb, var(--brand) 28%, transparent); color: #9a3412; border-radius: 12px; padding: 10px 13px; font-size: 12.5px; line-height: 1.5; margin-bottom: 6px; }
+.chat__warn .icon { width: 18px; height: 18px; color: var(--brand); flex: none; margin-top: 1px; }
+.chat__warn b { color: var(--brand); }
+
+/* ---- Report modal ---- */
+.chat-modal { position: fixed; inset: 0; background: rgba(16,26,50,.5); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 200; }
+.chat-modal.open { display: flex; }
+.chat-modal__box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 420px; box-shadow: var(--shadow); overflow: hidden; }
+.chat-modal__head { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.chat-modal__head h3 { font-size: 17px; }
+.chat-modal__close { margin-left: auto; background: none; border: 0; cursor: pointer; color: var(--text-soft); padding: 2px; }
+.chat-modal__close .icon { width: 20px; height: 20px; }
+.chat-report { padding: 18px 20px 20px; }
+.chat-report__who { font-size: 14px; margin-bottom: 12px; }
+.chat-report__reasons { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+.chat-report__opt { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid var(--border); border-radius: 11px; cursor: pointer; font-size: 14px; transition: .15s; }
+.chat-report__opt:hover { border-color: var(--brand); }
+.chat-report__opt:has(input:checked) { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 8%, transparent); }
+.chat-report__opt input { accent-color: var(--brand); width: 16px; height: 16px; }
+.chat-report textarea { width: 100%; border: 1px solid var(--border); border-radius: 11px; padding: 10px 13px; font: inherit; resize: vertical; outline: 0; margin-bottom: 12px; color: var(--text); background: var(--bg); }
+.chat-report textarea:focus { border-color: var(--brand); }
+.chat-report__msg { text-align: center; font-size: 13px; color: #e5484d; margin-top: 8px; min-height: 18px; }
+
 /* ---- Responsive ---- */
 @media (max-width: 760px) {
   .chat { grid-template-columns: 1fr; }

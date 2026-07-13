@@ -9,6 +9,8 @@ server/data/cart.json
 server/data/orders.json
 server/data/messages.json
 server/data/profiles.json
+server/data/reports.json
+server/data/mail.config.json
 server/data/uploads/
 
 # ระบบ

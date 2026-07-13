@@ -28,10 +28,14 @@ const CART_FILE = path.join(DATA_DIR, "cart.json");        // { email: [{id, qty
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");    // [ {id, email, items, total,...} ]
 const MSG_FILE = path.join(DATA_DIR, "messages.json");     // [ {id, fromEmail, toEmail,...} ]
 const PROFILES_FILE = path.join(DATA_DIR, "profiles.json"); // { email: { promptpay } }
+const REPORTS_FILE = path.join(DATA_DIR, "reports.json");   // [ {id, convId, reporterEmail, reason,...} ]
 const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
 const SECRET_FILE = path.join(DATA_DIR, "secret.key");
 const COOKIE = "dh_session";
 const SESSION_DAYS = 7;
+
+// บัญชีเดียวที่เป็นแอดมิน — ต้องเช็กที่ server ทุก /api/admin/* (ไม่ใช่แค่ซ่อนเมนู)
+const ADMIN_EMAIL = "np.chinnakit@gmail.com";
 
 // OTP settings
 const OTP_TTL_MS = 10 * 60 * 1000;   // OTP valid for 10 minutes
@@ -148,9 +152,19 @@ function promptpayPayload(id, amount) {
   p += "6304";
   return p + crc16ccitt(p);
 }
-/* Current logged-in user from cookie, or null */
+/* Current logged-in user from cookie, or null.
+   นอกจากเช็กลายเซ็น cookie แล้ว ยังเช็กด้วยว่าบัญชียังอยู่จริงและไม่ถูกแบน
+   -> คนที่ถูกลบ/ถูกแบน จะหลุดออกจากระบบทันทีทุกหน้า แม้ cookie ยังไม่หมดอายุ */
 function sessionUser(req) {
-  return verify(parseCookies(req)[COOKIE]);
+  const payload = verify(parseCookies(req)[COOKIE]);
+  if (!payload) return null;
+  const u = readUsers().find((x) => x.email === payload.email);
+  if (!u || u.banned) return null;
+  return payload;
+}
+/* แอดมินหรือไม่ (ล็อกที่อีเมลเดียว) */
+function isAdmin(user) {
+  return !!(user && user.email === ADMIN_EMAIL);
 }
 
 /* Server secret for signing session cookies (generated once, kept locally) */
@@ -368,6 +382,7 @@ async function handleApi(req, res, url) {
     if (!verifyPassword(password, user.pass)) {
       return json(res, 401, { error: "รหัสผ่านไม่ถูกต้อง" });
     }
+    if (user.banned) return json(res, 403, { error: "บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ" });
     const token = sign({ email: user.email, name: user.name, exp: Date.now() + SESSION_DAYS * 864e5 });
     return json(res, 200, { user: { name: user.name, email: user.email } }, { "Set-Cookie": sessionCookie(token) });
   }
@@ -457,10 +472,9 @@ async function handleApi(req, res, url) {
   }
 
   if (route === "/api/me" && req.method === "GET") {
-    const token = parseCookies(req)[COOKIE];
-    const payload = verify(token);
-    if (!payload) return json(res, 200, { user: null });
-    return json(res, 200, { user: { name: payload.name, email: payload.email } });
+    const me = sessionUser(req);
+    if (!me) return json(res, 200, { user: null });
+    return json(res, 200, { user: { name: me.name, email: me.email, isAdmin: isAdmin(me) } });
   }
 
   // ---- Products (user listings) ----
@@ -713,6 +727,197 @@ async function handleApi(req, res, url) {
     return json(res, 200, { orderId: order.id, amount: order.total, promptpay: promptpay, payload: payload, sellerName: sellerName, paid: !!order.paid });
   }
 
+  // ---- Report: ผู้ใช้กด "รายงานปัญหา" ในห้องแชท ----
+  // แอดมินจะเห็นเนื้อหาห้องแชทได้ "เฉพาะห้องที่ถูกรายงาน" เท่านั้น (ไม่แอบอ่านทุกห้อง)
+  const REPORT_REASONS = [
+    "มิจฉาชีพ / หลอกลวง", "ไม่ได้รับสินค้า / ไม่ส่งของ", "สินค้าปลอม / ไม่ตรงปก",
+    "พูดจาไม่สุภาพ / คุกคาม", "สแปม / โฆษณากวนใจ", "อื่นๆ"
+  ];
+  if (route === "/api/reports" && req.method === "POST") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const b = await readBody(req);
+    const convId = String(b.convId || "").trim();
+    const reason = String(b.reason || "").trim();
+    const detail = String(b.detail || "").trim().slice(0, 500);
+    if (REPORT_REASONS.indexOf(reason) < 0) return json(res, 400, { error: "กรุณาเลือกหมวดปัญหา" });
+    const msgs = readJsonFile(MSG_FILE, []);
+    const inConv = msgs.find((m) => m.convId === convId && (m.from === me.email || m.to === me.email));
+    if (!inConv) return json(res, 404, { error: "ไม่พบห้องสนทนา หรือคุณไม่ได้อยู่ในห้องนี้" });
+    const other = inConv.from === me.email ? inConv.to : inConv.from;
+    const reports = readJsonFile(REPORTS_FILE, []);
+    reports.unshift({
+      id: "rp_" + crypto.randomBytes(5).toString("hex"),
+      convId: convId,
+      reporterEmail: me.email, reporterName: me.name,
+      againstEmail: other, againstName: userName(other),
+      reason: reason, detail: detail,
+      resolved: false, createdAt: Date.now()
+    });
+    writeJsonFile(REPORTS_FILE, reports);
+    return json(res, 200, { ok: true });
+  }
+
+  // ---- Admin (เฉพาะ ADMIN_EMAIL) ----
+  // guard รวมศูนย์: ทุก /api/admin/* ต้องผ่านตรงนี้ก่อน จะลืมเช็กไม่ได้
+  if (route.startsWith("/api/admin/")) {
+    const me = sessionUser(req);
+    if (!isAdmin(me)) return json(res, 403, { error: "เฉพาะแอดมินเท่านั้น" });
+
+    const users = readUsers();
+    const products = readProducts();
+    const orders = readJsonFile(ORDERS_FILE, []);
+    const nameByEmail = {};
+    users.forEach((u) => { nameByEmail[u.email] = u.name; });
+    const pubOrder = (o) => ({
+      id: o.id, buyerName: nameByEmail[o.email] || o.email, buyerEmail: o.email,
+      items: o.items, total: o.total, status: o.status, paid: !!o.paid, createdAt: o.createdAt
+    });
+
+    // ภาพรวม (แดชบอร์ด)
+    if (route === "/api/admin/stats" && req.method === "GET") {
+      const paid = orders.filter((o) => o.paid);
+      const reports = readJsonFile(REPORTS_FILE, []);
+      return json(res, 200, {
+        users: users.length,
+        products: products.length,
+        orders: orders.length,
+        paidOrders: paid.length,
+        revenue: paid.reduce((s, o) => s + (o.total || 0), 0),
+        openReports: reports.filter((r) => !r.resolved).length,
+        recentOrders: orders.slice(0, 6).map(pubOrder)
+      });
+    }
+
+    // รายชื่อสมาชิกทั้งหมด + จำนวนออเดอร์/สินค้า
+    if (route === "/api/admin/users" && req.method === "GET") {
+      const profiles = readJsonFile(PROFILES_FILE, {});
+      const list = users.map((u) => ({
+        name: u.name, email: u.email, createdAt: u.createdAt || 0,
+        banned: !!u.banned, isAdmin: u.email === ADMIN_EMAIL,
+        orderCount: orders.filter((o) => o.email === u.email).length,
+        productCount: products.filter((p) => p.ownerEmail === u.email).length,
+        hasPromptpay: !!((profiles[u.email] || {}).promptpay)
+      })).sort((a, b) => b.createdAt - a.createdAt);
+      return json(res, 200, { users: list });
+    }
+
+    // แบน/ปลดแบน (toggle) — ห้ามแบนแอดมิน/ตัวเอง
+    if (route.startsWith("/api/admin/users/") && route.endsWith("/ban") && req.method === "POST") {
+      const email = decodeURIComponent(route.slice("/api/admin/users/".length, -"/ban".length)).toLowerCase();
+      if (email === ADMIN_EMAIL || email === me.email) return json(res, 400, { error: "ระงับบัญชีแอดมินไม่ได้" });
+      const u = users.find((x) => x.email === email);
+      if (!u) return json(res, 404, { error: "ไม่พบสมาชิก" });
+      u.banned = !u.banned;
+      writeUsers(users);
+      return json(res, 200, { ok: true, banned: !!u.banned });
+    }
+
+    // ลบบัญชีถาวร (+ ลบสินค้า/รูปของเขา, เก็บออเดอร์ไว้เป็นประวัติ) — ห้ามลบแอดมิน/ตัวเอง
+    if (route.startsWith("/api/admin/users/") && req.method === "DELETE") {
+      const email = decodeURIComponent(route.slice("/api/admin/users/".length)).toLowerCase();
+      if (email === ADMIN_EMAIL || email === me.email) return json(res, 400, { error: "ลบบัญชีแอดมินไม่ได้" });
+      const u = users.find((x) => x.email === email);
+      if (!u) return json(res, 404, { error: "ไม่พบสมาชิก" });
+      products.filter((p) => p.ownerEmail === email).forEach((p) => {
+        if (p.image) { try { fs.unlinkSync(path.join(UPLOADS_DIR, path.basename(p.image))); } catch (e) {} }
+      });
+      writeProducts(products.filter((p) => p.ownerEmail !== email));
+      writeUsers(users.filter((x) => x.email !== email));
+      return json(res, 200, { ok: true });
+    }
+
+    // รายละเอียดสมาชิกรายคน (บัญชี + สินค้า + ออเดอร์ + สรุปห้องแชท)
+    if (route.startsWith("/api/admin/users/") && req.method === "GET") {
+      const email = decodeURIComponent(route.slice("/api/admin/users/".length)).toLowerCase();
+      const u = users.find((x) => x.email === email);
+      if (!u) return json(res, 404, { error: "ไม่พบสมาชิก" });
+      const profiles = readJsonFile(PROFILES_FILE, {});
+      const msgs = readJsonFile(MSG_FILE, []).filter((m) => m.from === email || m.to === email);
+      const convs = {};
+      msgs.forEach((m) => {
+        const otherName = m.from === email ? m.toName : m.fromName;
+        if (!convs[m.convId]) convs[m.convId] = { convId: m.convId, otherName: otherName, count: 0, lastAt: 0 };
+        convs[m.convId].count += 1;
+        if (m.createdAt > convs[m.convId].lastAt) { convs[m.convId].lastAt = m.createdAt; convs[m.convId].otherName = otherName; }
+      });
+      return json(res, 200, {
+        user: {
+          name: u.name, email: u.email, createdAt: u.createdAt || 0,
+          banned: !!u.banned, isAdmin: u.email === ADMIN_EMAIL,
+          promptpay: (profiles[email] || {}).promptpay || ""
+        },
+        products: products.filter((p) => p.ownerEmail === email).map((p) => ({ id: p.id, name: p.name, price: p.price, image: p.image || null, icon: p.icon })),
+        orders: orders.filter((o) => o.email === email).map(pubOrder),
+        chats: Object.keys(convs).map((k) => convs[k]).sort((a, b) => b.lastAt - a.lastAt)
+      });
+    }
+
+    // ออเดอร์ทั้งหมด
+    if (route === "/api/admin/orders" && req.method === "GET") {
+      return json(res, 200, { orders: orders.map(pubOrder) });
+    }
+    // เปลี่ยนสถานะออเดอร์
+    if (route.startsWith("/api/admin/orders/") && route.endsWith("/status") && req.method === "POST") {
+      const id = decodeURIComponent(route.slice("/api/admin/orders/".length, -"/status".length));
+      const b = await readBody(req);
+      const status = String(b.status || "").trim();
+      const STATUSES = ["รอชำระเงิน", "ชำระเงินแล้ว", "กำลังจัดส่ง", "จัดส่งสำเร็จ", "ยกเลิก"];
+      if (STATUSES.indexOf(status) < 0) return json(res, 400, { error: "สถานะไม่ถูกต้อง" });
+      const o = orders.find((x) => x.id === id);
+      if (!o) return json(res, 404, { error: "ไม่พบออเดอร์" });
+      o.status = status;
+      o.paid = (status !== "รอชำระเงิน" && status !== "ยกเลิก");
+      writeJsonFile(ORDERS_FILE, orders);
+      return json(res, 200, { ok: true, status: status, paid: o.paid });
+    }
+
+    // สินค้าทั้งหมด (ทุกร้าน)
+    if (route === "/api/admin/products" && req.method === "GET") {
+      return json(res, 200, {
+        products: products.map((p) => ({
+          id: p.id, name: p.name, price: p.price, oldPrice: p.oldPrice,
+          image: p.image || null, icon: p.icon, ownerName: p.ownerName, ownerEmail: p.ownerEmail, createdAt: p.createdAt || 0
+        }))
+      });
+    }
+    // ลบสินค้าใดๆ (admin override)
+    if (route.startsWith("/api/admin/products/") && req.method === "DELETE") {
+      const id = decodeURIComponent(route.slice("/api/admin/products/".length));
+      const item = products.find((p) => p.id === id);
+      if (!item) return json(res, 404, { error: "ไม่พบสินค้า" });
+      if (item.image) { try { fs.unlinkSync(path.join(UPLOADS_DIR, path.basename(item.image))); } catch (e) {} }
+      writeProducts(products.filter((p) => p.id !== id));
+      return json(res, 200, { ok: true });
+    }
+
+    // รายการรายงาน (เห็นเฉพาะห้องที่ถูกกดรายงาน)
+    if (route === "/api/admin/reports" && req.method === "GET") {
+      return json(res, 200, { reports: readJsonFile(REPORTS_FILE, []) });
+    }
+    // อ่านข้อความในห้องที่ถูกรายงาน (ได้เฉพาะห้องที่มีรายงานเท่านั้น)
+    if (route.startsWith("/api/admin/reports/") && route.endsWith("/messages") && req.method === "GET") {
+      const convId = decodeURIComponent(route.slice("/api/admin/reports/".length, -"/messages".length));
+      const reports = readJsonFile(REPORTS_FILE, []);
+      if (!reports.some((r) => r.convId === convId)) return json(res, 403, { error: "ห้องนี้ไม่ได้ถูกรายงาน จึงเปิดอ่านไม่ได้" });
+      const msgs = readJsonFile(MSG_FILE, []).filter((m) => m.convId === convId).sort((a, b) => a.createdAt - b.createdAt)
+        .map((m) => ({ fromName: m.fromName, fromEmail: m.from, text: m.text, createdAt: m.createdAt, productName: m.productName }));
+      return json(res, 200, { convId: convId, messages: msgs });
+    }
+    // ปิดเคสรายงาน
+    if (route.startsWith("/api/admin/reports/") && route.endsWith("/resolve") && req.method === "POST") {
+      const id = decodeURIComponent(route.slice("/api/admin/reports/".length, -"/resolve".length));
+      const reports = readJsonFile(REPORTS_FILE, []);
+      const r = reports.find((x) => x.id === id);
+      if (!r) return json(res, 404, { error: "ไม่พบรายงาน" });
+      r.resolved = true;
+      writeJsonFile(REPORTS_FILE, reports);
+      return json(res, 200, { ok: true });
+    }
+
+    return json(res, 404, { error: "not found" });
+  }
+
   return json(res, 404, { error: "not found" });
 }
 
@@ -737,7 +942,10 @@ function serveStatic(req, res, url) {
     fs.readFile(target, (e, data) => {
       if (e) { res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }); return res.end("404 Not Found"); }
       const ext = path.extname(target).toLowerCase();
-      res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
+      const headers = { "Content-Type": MIME[ext] || "application/octet-stream" };
+      // ไฟล์โค้ด (html/js/css) ให้เบราว์เซอร์ revalidate ทุกครั้ง กันปัญหา cache ค้างเวอร์ชันเก่า
+      if (ext === ".html" || ext === ".js" || ext === ".css") headers["Cache-Control"] = "no-cache";
+      res.writeHead(200, headers);
       res.end(data);
     });
   });
