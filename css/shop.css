@@ -228,6 +228,17 @@
 .s-detail__actions .btn { flex: 1; }
 .s-detail__actions .btn .icon { width: 18px; height: 18px; }
 
+/* ---------- Product status (available/reserved/sold) ---------- */
+.s-status { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 3px; padding: 1px 6px; line-height: 1.5; }
+.s-status--available { color: #0f9d58; background: color-mix(in srgb, #16b364 14%, transparent); border: 1px solid color-mix(in srgb, #16b364 45%, transparent); }
+.s-status--reserved { color: #b07a00; background: color-mix(in srgb, #f7b500 20%, transparent); border: 1px solid color-mix(in srgb, #f7b500 55%, transparent); }
+.s-status--sold { color: #6b7280; background: color-mix(in srgb, #6b7280 14%, transparent); border: 1px solid color-mix(in srgb, #6b7280 40%, transparent); }
+.s-product--sold { filter: grayscale(1); opacity: .62; }
+.s-product--sold:hover { transform: none; box-shadow: none; }
+.s-detail__status { font-size: 12px; padding: 2px 9px; border-radius: 999px; vertical-align: middle; }
+.s-detail__actions .btn:disabled,
+.s-seller__btns .btn:disabled { opacity: .5; cursor: not-allowed; filter: grayscale(.4); transform: none !important; box-shadow: none !important; }
+
 .s-detail__seller-card { display: flex; align-items: center; gap: 14px; margin: 0 22px; padding: 16px 0; border-top: 1px solid var(--border); }
 .s-seller__avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--brand-grad); color: #fff; display: grid; place-items: center; font-weight: 800; font-family: var(--font-display); flex: none; }
 .s-seller__meta { display: flex; flex-direction: column; }

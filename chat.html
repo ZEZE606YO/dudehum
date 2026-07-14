@@ -80,6 +80,9 @@
       var currentConv = null;
       var pendingProduct = params.get("product");   // เริ่มแชทจากสินค้า
       var pendingName = params.get("name") || "ผู้ขาย";
+      var buyIntent = params.get("buy") === "1";     // มาจากปุ่ม "ซื้อ" -> ส่งข้อความสนใจอัตโนมัติ
+      var buyProdName = params.get("pname") || "";
+      var buyPrice = params.get("price") || "";
 
       var wrap = document.getElementById("chatWrap");
       var listEl = document.getElementById("chatList");
@@ -147,6 +150,24 @@
         msgsEl.innerHTML = WARN + '<div class="chat__placeholder">เริ่มการสนทนากับ <b>' + esc(name) + '</b><br />พิมพ์ข้อความแล้วกดส่งได้เลย</div>';
       }
 
+      // มาจากปุ่ม "ซื้อ" -> ส่งข้อความสนใจสินค้าอัตโนมัติ 1 ข้อความ แล้วเปิดห้อง
+      // (server ใช้ convId เดิมถ้ามีห้องกับผู้ขายคนนี้อยู่แล้ว / สร้างใหม่ถ้ายังไม่มี)
+      function autoBuyMessage(){
+        showRoom(pendingName);
+        placeholder.style.display = "none";
+        msgsEl.innerHTML = WARN + '<div class="chat__placeholder">กำลังเปิดแชทกับ <b>' + esc(pendingName) + '</b>...</div>';
+        var text = "สวัสดีครับ/ค่ะ ผมสนใจอยากได้สินค้า: " + buyProdName + (buyPrice ? " (฿" + buyPrice + ")" : "");
+        fetch('/api/messages', { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ productId: pendingProduct, text: text }) })
+          .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+          .then(function (res) {
+            if (!res.ok) { openPending(pendingName); alert(res.d.error || "ส่งข้อความไม่สำเร็จ"); return; }
+            currentConv = res.d.convId;
+            openConv(currentConv, pendingName);   // เข้าห้อง (โชว์ข้อความที่เพิ่งส่ง — renderMessages ใช้ esc() กัน XSS อยู่แล้ว)
+            loadChats();
+          })
+          .catch(function () { openPending(pendingName); });
+      }
+
       listEl.addEventListener("click", function (e) {
         var btn = e.target.closest(".chat-conv"); if (!btn) return;
         openConv(btn.getAttribute("data-conv"), btn.getAttribute("data-name"));
@@ -201,7 +222,8 @@
 
       // เปิดครั้งแรก
       await loadChats();
-      if (pendingProduct) openPending(pendingName);
+      if (pendingProduct && buyIntent) autoBuyMessage();
+      else if (pendingProduct) openPending(pendingName);
 
       // อัปเดตอัตโนมัติ (polling)
       setInterval(function () {

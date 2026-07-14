@@ -484,6 +484,7 @@ async function handleApi(req, res, url) {
     const list = readProducts().map((p) => ({
       id: p.id, name: p.name, price: p.price, oldPrice: p.oldPrice,
       desc: p.desc, icon: p.icon, image: p.image || null, ownerName: p.ownerName,
+      status: p.status || "available",   // สินค้าเก่าที่ไม่มี field นี้ = ว่าง (backward compatible)
       mine: !!(me && me.email === p.ownerEmail)
     }));
     return json(res, 200, { products: list });
@@ -509,11 +510,12 @@ async function handleApi(req, res, url) {
     const product = {
       id, name, desc, icon, price, oldPrice, image,
       ownerEmail: me.email, ownerName: me.name,
+      status: "available",
       createdAt: Date.now()
     };
     list.unshift(product);
     writeProducts(list);
-    return json(res, 200, { product: { id, name, price, oldPrice, desc, icon, image, ownerName: me.name, mine: true } });
+    return json(res, 200, { product: { id, name, price, oldPrice, desc, icon, image, ownerName: me.name, status: "available", mine: true } });
   }
 
   // Delete own product
@@ -528,6 +530,24 @@ async function handleApi(req, res, url) {
     if (item.image) { try { fs.unlinkSync(path.join(UPLOADS_DIR, path.basename(item.image))); } catch (e) {} }
     writeProducts(list.filter((p) => p.id !== id));
     return json(res, 200, { ok: true });
+  }
+
+  // เปลี่ยนสถานะสินค้า (เฉพาะเจ้าของ) — available | reserved | sold
+  if (route.startsWith("/api/products/") && route.endsWith("/status") && req.method === "POST") {
+    const me = sessionUser(req);
+    if (!me) return json(res, 401, { error: "กรุณาเข้าสู่ระบบ" });
+    const id = decodeURIComponent(route.slice("/api/products/".length, -"/status".length));
+    const b = await readBody(req);
+    const status = String(b.status || "");
+    const ALLOWED = ["available", "reserved", "sold"];
+    if (ALLOWED.indexOf(status) < 0) return json(res, 400, { error: "สถานะไม่ถูกต้อง" });
+    const list = readProducts();
+    const item = list.find((p) => p.id === id);
+    if (!item) return json(res, 404, { error: "ไม่พบสินค้านี้" });
+    if (item.ownerEmail !== me.email) return json(res, 403, { error: "เปลี่ยนสถานะได้เฉพาะสินค้าของคุณเอง" });
+    item.status = status;
+    writeProducts(list);
+    return json(res, 200, { ok: true, status: status });
   }
 
   // ---- Favorites (ถูกใจ) ----
@@ -604,10 +624,12 @@ async function handleApi(req, res, url) {
     let items = [];
     if (b.fromCart) {
       const cart = readJsonFile(CART_FILE, {})[me.email] || [];
-      items = cart.map((it) => { const p = findProduct(it.id); return p ? { id: p.id, name: p.name, price: p.price, icon: p.icon, image: p.image || null, qty: it.qty } : null; }).filter(Boolean);
+      // ข้ามสินค้าที่ขายแล้ว
+      items = cart.map((it) => { const p = findProduct(it.id); return p && (p.status || "available") !== "sold" ? { id: p.id, name: p.name, price: p.price, icon: p.icon, image: p.image || null, qty: it.qty } : null; }).filter(Boolean);
     } else {
       const p = findProduct(String(b.productId || ""));
       if (!p) return json(res, 404, { error: "ไม่พบสินค้า" });
+      if ((p.status || "available") === "sold") return json(res, 400, { error: "สินค้านี้ขายแล้ว" });
       const qty = Math.max(1, Math.min(99, Math.round(Number(b.qty) || 1)));
       items = [{ id: p.id, name: p.name, price: p.price, icon: p.icon, image: p.image || null, qty: qty }];
     }
@@ -771,7 +793,8 @@ async function handleApi(req, res, url) {
     users.forEach((u) => { nameByEmail[u.email] = u.name; });
     const pubOrder = (o) => ({
       id: o.id, buyerName: nameByEmail[o.email] || o.email, buyerEmail: o.email,
-      items: o.items, total: o.total, status: o.status, paid: !!o.paid, createdAt: o.createdAt
+      items: o.items, total: o.total, status: o.status, paid: !!o.paid,
+      tracking: o.tracking || "", createdAt: o.createdAt
     });
 
     // ภาพรวม (แดชบอร์ด)
@@ -870,6 +893,17 @@ async function handleApi(req, res, url) {
       o.paid = (status !== "รอชำระเงิน" && status !== "ยกเลิก");
       writeJsonFile(ORDERS_FILE, orders);
       return json(res, 200, { ok: true, status: status, paid: o.paid });
+    }
+    // บันทึกเลขพัสดุ (tracking) — ผู้ซื้อเอาไปแทร็คของกับขนส่งได้
+    if (route.startsWith("/api/admin/orders/") && route.endsWith("/tracking") && req.method === "POST") {
+      const id = decodeURIComponent(route.slice("/api/admin/orders/".length, -"/tracking".length));
+      const b = await readBody(req);
+      const tracking = String(b.tracking || "").trim().slice(0, 60);
+      const o = orders.find((x) => x.id === id);
+      if (!o) return json(res, 404, { error: "ไม่พบออเดอร์" });
+      o.tracking = tracking;
+      writeJsonFile(ORDERS_FILE, orders);
+      return json(res, 200, { ok: true, tracking: tracking });
     }
 
     // สินค้าทั้งหมด (ทุกร้าน)

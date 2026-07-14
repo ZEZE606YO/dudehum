@@ -10,6 +10,22 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .my-products { display: flex; flex-direction: column; gap: 4px; }
+    .my-product { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .my-product:last-child { border-bottom: 0; }
+    .my-product__thumb { width: 48px; height: 48px; border-radius: 10px; overflow: hidden; background: var(--bg-tint); display: grid; place-items: center; flex: none; }
+    .my-product__thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .my-product__info { flex: 1; min-width: 0; }
+    .my-product__info strong { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .my-product__info span { font-size: 13px; color: var(--text-soft); }
+    .my-product__st { font-weight: 600; }
+    .my-product__st--available { color: #0f9d58; }
+    .my-product__st--reserved { color: #b07a00; }
+    .my-product__st--sold { color: #6b7280; }
+    .my-status { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: var(--bg); color: var(--text); cursor: pointer; flex: none; }
+    .my-status:focus { outline: 0; border-color: var(--brand); }
+  </style>
 </head>
 <body>
   <header class="site-header scrolled" id="header">
@@ -69,6 +85,11 @@
       </section>
 
       <section class="account__panel">
+        <h2>สินค้าของฉัน</h2>
+        <div class="my-products" id="myProducts"></div>
+      </section>
+
+      <section class="account__panel">
         <h2>คำสั่งซื้อล่าสุด</h2>
         <div class="orders" id="orders"></div>
       </section>
@@ -110,7 +131,9 @@
             var date = new Date(o.createdAt).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
             return '<div class="order"><span class="order__thumb">' + media + '</span>' +
               '<div class="order__info"><strong>' + esc(it.name || 'สินค้า') + more + '</strong>' +
-              '<span>#' + esc(o.id) + ' • ' + date + '</span></div>' +
+              '<span>#' + esc(o.id) + ' • ' + date + '</span>' +
+              (o.tracking ? '<span style="font-size:12.5px;color:var(--brand);font-weight:600">เลขพัสดุ: ' + esc(o.tracking) + '</span>' : '') +
+              '</div>' +
               '<span class="order__price">฿' + o.total + '</span>' +
               '<span class="badge-status is-ship">' + esc(o.status || 'รอดำเนินการ') + '</span></div>';
           }).join("");
@@ -127,6 +150,50 @@
           .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
           .then(function (res) { ppMsg.textContent = res.ok ? "บันทึกพร้อมเพย์แล้ว" : (res.d.error || "บันทึกไม่สำเร็จ"); ppMsg.style.color = res.ok ? "#16b364" : "#e5484d"; });
       });
+
+      // ----- สินค้าของฉัน + เปลี่ยนสถานะ (ว่าง / จองแล้ว / ขายแล้ว) -----
+      var STATUS_LABELS = { available: "ว่าง", reserved: "จองแล้ว", sold: "ขายแล้ว" };
+      var BOXICON = '<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="width:26px;height:26px;color:var(--brand)"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4"/><path d="M12 11v10"/></svg>';
+      var myBox = document.getElementById("myProducts");
+      function statusOptions(cur){
+        return ["available", "reserved", "sold"].map(function (s) {
+          return '<option value="' + s + '"' + (s === cur ? ' selected' : '') + '>' + STATUS_LABELS[s] + '</option>';
+        }).join("");
+      }
+      function loadMyProducts(){
+        fetch('/api/products', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (d) {
+          var mine = (d.products || []).filter(function (p) { return p.mine; });
+          if (!mine.length) { myBox.innerHTML = '<div class="orders-empty">ยังไม่มีสินค้าที่ลงขาย — ไปลงขายที่หน้าร้านได้เลย</div>'; return; }
+          myBox.innerHTML = mine.map(function (p) {
+            var st = (p.status === "reserved" || p.status === "sold") ? p.status : "available";
+            var media = p.image ? '<img src="' + esc(p.image) + '" alt="">' : BOXICON;
+            return '<div class="my-product">' +
+              '<span class="my-product__thumb">' + media + '</span>' +
+              '<div class="my-product__info"><strong>' + esc(p.name) + '</strong>' +
+                '<span>฿' + p.price + ' · <span class="my-product__st my-product__st--' + st + '">' + esc(STATUS_LABELS[st]) + '</span></span></div>' +
+              '<select class="my-status" data-id="' + esc(p.id) + '">' + statusOptions(st) + '</select>' +
+              '</div>';
+          }).join("");
+          myBox.querySelectorAll(".my-status").forEach(function (sel) {
+            // กันเมาส์วีลเลื่อนเปลี่ยนค่า select ที่โฟกัสอยู่โดยไม่ตั้งใจ
+            sel.addEventListener("wheel", function () { if (document.activeElement === sel) sel.blur(); });
+            sel.addEventListener("change", function () {
+              var id = sel.getAttribute("data-id");
+              fetch('/api/products/' + encodeURIComponent(id) + '/status', { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ status: sel.value }) })
+                .then(function (r) { return r.json().then(function (dd) { return { ok: r.ok, d: dd }; }); })
+                .then(function (res) {
+                  if (!res.ok) { alert(res.d.error || "เปลี่ยนสถานะไม่สำเร็จ"); loadMyProducts(); return; }
+                  // อัปเดตป้ายทันที ไม่รีเฟรชทั้งหน้า (สถานะ server ตรวจแล้ว = 1 ใน 3 ค่า)
+                  var st2 = res.d.status;
+                  var lab = sel.closest(".my-product").querySelector(".my-product__st");
+                  lab.textContent = STATUS_LABELS[st2] || st2;
+                  lab.className = "my-product__st my-product__st--" + st2;
+                });
+            });
+          });
+        }).catch(function () { myBox.innerHTML = '<div class="orders-empty">โหลดสินค้าไม่สำเร็จ</div>'; });
+      }
+      loadMyProducts();
     })();
   </script>
 </body>

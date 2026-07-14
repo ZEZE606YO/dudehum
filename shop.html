@@ -187,7 +187,7 @@
 
         <!-- ขวา: ข้อมูล -->
         <div class="s-detail__info">
-          <div><span class="s-detail__mall">DUDEHUM</span></div>
+          <div><span class="s-detail__mall">DUDEHUM</span> <span id="detailStatus"></span></div>
           <h2 id="detailName"></h2>
           <div class="s-detail__rating" id="detailRating"></div>
 
@@ -450,13 +450,16 @@
         var badge = pct > 0 ? '<span class="s-disc">-' + pct + '%</span>' : '';
         var oldTxt = hasDisc ? ' <s>฿' + p.oldPrice + '</s>' : '';
         var del = p.mine ? '<button class="s-del" type="button" data-id="' + esc(p.id) + '" title="ลบสินค้า"><svg class="icon" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button>' : '';
+        var status = p.status || "available";
+        var stTag = status === "reserved" ? '<span class="s-status s-status--reserved">จองแล้ว</span>'
+                  : status === "sold" ? '<span class="s-status s-status--sold">ขายแล้ว</span>' : '';
         var media = p.image
           ? '<div class="s-product__img"><img src="' + esc(p.image) + '" alt="' + esc(p.name) + '"></div>'
           : '<div class="s-product__img">' + ic(p.icon) + '</div>';
-        return '<div class="s-product" data-id="' + esc(p.id) + '">' + badge + del + media +
+        return '<div class="s-product' + (status === "sold" ? " s-product--sold" : "") + '" data-id="' + esc(p.id) + '" data-status="' + esc(status) + '">' + badge + del + media +
           '<div class="s-product__body">' +
             '<div class="s-product__name">' + esc(p.name) + '</div>' +
-            '<div class="s-tags"><span class="s-tag">ส่งฟรี</span>' + (hasDisc ? '<span class="s-tag s-tag--hot">ลดราคา</span>' : '') + '</div>' +
+            '<div class="s-tags">' + stTag + '<span class="s-tag">ส่งฟรี</span>' + (hasDisc ? '<span class="s-tag s-tag--hot">ลดราคา</span>' : '') + '</div>' +
             '<div class="s-product__foot">' +
               '<div class="s-product__price">฿' + p.price + oldTxt + '</div>' +
               '<div class="s-product__meta">โดย ' + esc(p.ownerName || "ผู้ขาย") + '</div>' +
@@ -563,6 +566,16 @@
         document.getElementById("detailSeller").textContent = owner;
         document.getElementById("detailSellerAvatar").textContent = owner.trim().charAt(0).toUpperCase() || "U";
         currentProduct = p;
+        // สถานะสินค้า (whitelist ค่าก่อนใส่ className, ข้อความใช้ textContent กัน XSS)
+        var stCls = p.status === "reserved" ? "reserved" : p.status === "sold" ? "sold" : "available";
+        var stEl = document.getElementById("detailStatus");
+        stEl.className = "s-detail__status s-status s-status--" + stCls;
+        stEl.textContent = stCls === "reserved" ? "จองแล้ว" : stCls === "sold" ? "ขายแล้ว" : "ว่าง";
+        var sold = stCls === "sold";
+        var buyBtn = document.getElementById("buyBtn");
+        buyBtn.disabled = sold; buyBtn.textContent = sold ? "สินค้าขายแล้ว" : "ซื้อสินค้า";
+        document.getElementById("cartBtn").disabled = sold;
+        document.getElementById("chatBtn").disabled = sold;
         updateFavHeart();
         detailModal.classList.add("open");
       }
@@ -601,14 +614,17 @@
           toast("เพิ่มลงตะกร้าแล้ว");
         });
       });
-      // ซื้อสินค้า (สร้างออเดอร์)
+      // ซื้อสินค้า -> ทักแชทกับผู้ขาย + ส่งข้อความสนใจอัตโนมัติ
+      // NOTE: flow จ่ายเงิน QR พร้อมเพย์เดิมยังอยู่ครบ (openPayment()/#payModal/api/pay/js/qrcode.js)
+      //       แค่ "เลิกเรียก" จากปุ่มซื้อ — ถ้าจะเอากลับมาใช้ ก็เรียก openPayment(orderId) ได้เหมือนเดิม
       document.getElementById("buyBtn").addEventListener("click", function () {
         if (!currentProduct) return;
-        postJSON('/api/orders', { productId: currentProduct.id, qty: parseInt(qtyVal.textContent, 10) || 1 }).then(function (res) {
-          if (!res.ok) { toast(res.d.error || "สั่งซื้อไม่สำเร็จ"); return; }
-          closeDetail();
-          openPayment(res.d.order.id);
-        });
+        if (currentProduct.mine) { toast("นี่คือสินค้าของคุณเอง ทักหาตัวเองไม่ได้"); return; }
+        var owner = currentProduct.ownerName || "ผู้ขาย";
+        location.href = "chat.html?product=" + encodeURIComponent(currentProduct.id) +
+          "&name=" + encodeURIComponent(owner) +
+          "&pname=" + encodeURIComponent(currentProduct.name || "") +
+          "&price=" + encodeURIComponent(currentProduct.price || "") + "&buy=1";
       });
       // แชทกับผู้ขาย → ไปหน้าแชท
       document.getElementById("chatBtn").addEventListener("click", function () {

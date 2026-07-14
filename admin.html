@@ -94,6 +94,9 @@
     .a-thumb { width: 42px; height: 42px; border-radius: 9px; overflow: hidden; background: var(--bg-tint); display: grid; place-items: center; flex: none; }
     .a-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .a-thumb .icon { width: 22px; height: 22px; color: var(--text-soft); }
+    .track-cell { display: inline-flex; gap: 6px; align-items: center; }
+    .track-inp { border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 13px; width: 128px; outline: 0; background: var(--bg); color: var(--text); }
+    .track-inp:focus { border-color: var(--brand); }
 
     /* Modal */
     .admin-modal { position: fixed; inset: 0; background: rgba(16,26,50,.5); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 200; }
@@ -372,19 +375,48 @@
         var STATUSES = ["รอชำระเงิน","ชำระเงินแล้ว","กำลังจัดส่ง","จัดส่งสำเร็จ","ยกเลิก"];
         if (!d.orders.length) { view.innerHTML = '<div class="a-card"><div class="a-empty">ยังไม่มีออเดอร์</div></div>'; return; }
         view.innerHTML = '<div class="a-card"><div class="a-card__head"><h2>ออเดอร์ทั้งหมด ('+d.orders.length+')</h2></div><div class="a-tablewrap">' +
-          '<table class="a-tbl"><thead><tr><th>รหัส</th><th>ผู้ซื้อ</th><th>สินค้า</th><th>ยอด</th><th>วันที่</th><th>สถานะ</th></tr></thead><tbody>' +
+          '<table class="a-tbl"><thead><tr><th>รหัส</th><th>ผู้ซื้อ</th><th>สินค้า</th><th>ยอด</th><th>วันที่</th><th>สถานะ</th><th>เลขพัสดุ</th></tr></thead><tbody>' +
           d.orders.map(function(o){
             var first = (o.items && o.items[0]) || {};
             var more = o.items && o.items.length > 1 ? ' +'+(o.items.length-1) : '';
             var opts = STATUSES.map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s+'</option>'; }).join("");
             return '<tr><td>#'+esc(o.id)+'</td><td>'+esc(o.buyerName)+'</td><td>'+esc(first.name||'-')+'<span class="a-sub">'+more+'</span></td>' +
               '<td>'+baht(o.total)+'</td><td class="a-sub">'+fmtDT(o.createdAt)+'</td>' +
-              '<td><select class="a-btn ostatus" data-id="'+esc(o.id)+'">'+opts+'</select></td></tr>';
+              '<td><select class="a-btn ostatus" data-id="'+esc(o.id)+'" data-orig="'+esc(o.status)+'">'+opts+'</select></td>' +
+              '<td><span class="track-cell"><input class="track-inp" data-id="'+esc(o.id)+'" value="'+esc(o.tracking||'')+'" placeholder="กรอกเลขพัสดุ" maxlength="60"><button class="a-btn track-save" data-id="'+esc(o.id)+'">บันทึก</button></span></td></tr>';
           }).join("") + '</tbody></table></div></div>';
         view.querySelectorAll(".ostatus").forEach(function(sel){
+          // กันเมาส์วีลเปลี่ยนค่า select ที่โฟกัสอยู่โดยไม่ตั้งใจ (พอ scroll จะปล่อยโฟกัสให้หน้าเลื่อนแทน)
+          sel.addEventListener("wheel", function(){ if (document.activeElement === sel) sel.blur(); });
           sel.addEventListener("change", async function(){
-            try { await api("/api/admin/orders/"+encodeURIComponent(sel.getAttribute("data-id"))+"/status", "POST", { status: sel.value }); toast("อัปเดตสถานะแล้ว"); }
-            catch(e){ toast(e.message); }
+            var id = sel.getAttribute("data-id");
+            var orig = sel.getAttribute("data-orig");
+            var next = sel.value;
+            if (next === orig) return;
+            // ยืนยันก่อนบันทึก — กันเผลอเปลี่ยน (เช่นโดนวีล/คีย์บอร์ด)
+            if (!confirm('เปลี่ยนสถานะออเดอร์ #' + id + '\nจาก "' + orig + '"  →  "' + next + '" ?')) {
+              sel.value = orig;   // ยกเลิก: คืนค่าเดิม
+              return;
+            }
+            try {
+              await api("/api/admin/orders/"+encodeURIComponent(id)+"/status", "POST", { status: next });
+              sel.setAttribute("data-orig", next);
+              toast('อัปเดตออเดอร์ #' + id + ' เป็น "' + next + '"');
+            } catch(e) {
+              toast(e.message);
+              sel.value = orig;   // บันทึกไม่สำเร็จ: คืนค่าเดิม
+            }
+          });
+        });
+        // บันทึกเลขพัสดุ
+        view.querySelectorAll(".track-save").forEach(function(btn){
+          btn.addEventListener("click", async function(){
+            var id = btn.getAttribute("data-id");
+            var inp = btn.parentNode.querySelector(".track-inp");
+            try {
+              var r = await api("/api/admin/orders/"+encodeURIComponent(id)+"/tracking", "POST", { tracking: inp.value.trim() });
+              toast(r.tracking ? ('บันทึกเลขพัสดุ #'+id+' แล้ว') : ('ล้างเลขพัสดุ #'+id+' แล้ว'));
+            } catch(e){ toast(e.message); }
           });
         });
       }
